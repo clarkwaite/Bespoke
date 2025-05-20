@@ -21,12 +21,6 @@ const Sales: React.FC = () => {
     });
     const [isLoading, setIsLoading] = useState(false);
     const [notification, setNotification] = useState<ErrorMessage | null>(null);
-    const [newSale, setNewSale] = useState<SaleFormData>({
-        productId: 0,
-        salesPersonId: 0,
-        customerId: 0,
-        date: new Date().toISOString().split('T')[0]
-    });
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [products, setProducts] = useState<Product[]>([]);
     const [salespersons, setSalespersons] = useState<Salesperson[]>([]);
@@ -87,7 +81,6 @@ const Sales: React.FC = () => {
     }, [fetchSales, fetchDropdownData]);
 
     const handleAddSale = async (formData: SaleFormData) => {
-        console.log('Adding sale:', formData);
         try {
             const response = await fetch('/api/sales', {
                 method: 'POST',
@@ -99,12 +92,6 @@ const Sales: React.FC = () => {
             const data: ApiResponse<Sale> = await response.json();
             if (data.success) {
                 setSales([...sales, data.data]);
-                setNewSale({
-                    productId: 0,
-                    salesPersonId: 0,
-                    customerId: 0,
-                    date: new Date().toISOString().split('T')[0]
-                });
                 setIsAddModalOpen(false);
                 showNotification('Sale created successfully', 'success');
             } else {
@@ -160,7 +147,6 @@ const Sales: React.FC = () => {
             <SalesModal
                 isModalOpen={isAddModalOpen}
                 setIsModalOpen={setIsAddModalOpen}
-                sale={newSale}
                 products={products}
                 salespersons={salespersons}
                 customers={customers}

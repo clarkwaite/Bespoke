@@ -8,15 +8,6 @@ type ErrorMessage = {
     type: 'error' | 'success';
 };
 
-const deleteButtonStyle = {
-    ...formStyles.button,
-    backgroundColor: '#dc2626',
-    borderColor: '#dc2626',
-    ':hover': {
-        backgroundColor: '#b91c1c',
-    }
-};
-
 const Customers: React.FC = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
@@ -65,7 +56,7 @@ const Customers: React.FC = () => {
                     },
                     body: JSON.stringify(customer),
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to update customer');
                 }
@@ -199,7 +190,7 @@ const Customers: React.FC = () => {
                                         </button>
                                         <button
                                             onClick={() => handleDeleteCustomer(customer.id)}
-                                            style={deleteButtonStyle}
+                                            style={formStyles.deleteButton}
                                         >
                                             Delete
                                         </button>

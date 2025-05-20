@@ -13,7 +13,6 @@ type ValidationErrors = {
 type SaleModalProps = {
     isModalOpen: boolean;
     setIsModalOpen: (isOpen: boolean) => void;
-    sale?: SaleFormData | null;
     handleSave: (sale: SaleFormData) => void;
     isEditMode: boolean;
     products: {
@@ -36,7 +35,6 @@ type SaleModalProps = {
 export const SalesModal = ({
     isModalOpen,
     setIsModalOpen,
-    sale,
     handleSave,
     isEditMode,
     products,
@@ -53,21 +51,14 @@ export const SalesModal = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        if (sale) {
-            setFormData({
-                ...sale,
-                date: sale.date.split('T')[0]
-            });
-        } else {
-            setFormData({
-                productId: 0,
-                salesPersonId: 0,
-                customerId: 0,
-                date: new Date().toISOString().split('T')[0]
-            });
-        }
+        setFormData({
+            productId: 0,
+            salesPersonId: 0,
+            customerId: 0,
+            date: new Date().toISOString().split('T')[0]
+        });
         setErrors({});
-    }, [sale, isModalOpen]);
+    }, [isModalOpen]);
 
     const validateForm = (): boolean => {
         const newErrors: ValidationErrors = {};
@@ -99,16 +90,9 @@ export const SalesModal = ({
     };
 
     const handleSubmit = () => {
-        console.log('Form data:', {
-            ...formData,
-            id: isEditMode ? sale?.id : undefined
-        });
         if (validateForm()) {
             setIsSubmitting(true);
-            handleSave({
-                ...formData,
-                id: isEditMode ? sale?.id : undefined
-            });
+            handleSave(formData);
             setIsSubmitting(false);
             setIsModalOpen(false);
         }

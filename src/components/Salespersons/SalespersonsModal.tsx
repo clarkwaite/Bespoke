@@ -115,7 +115,6 @@ export const SalespersonsModal = ({
             const duplicateError = checkForDuplicates(formData);
             if (duplicateError) {
                 if (duplicateError.name) {
-                    console.log("dupe error", duplicateError.name);
                     newErrors.duplicateName = duplicateError.name;
                 }
                 if (duplicateError.phone) {
@@ -181,48 +180,48 @@ export const SalespersonsModal = ({
             showConfirmButton={false}
         >
             <div>
-                    <div style={formStyles.field}>
-                        <label style={formStyles.label}>First Name *</label>
-                        <input
-                            style={{
-                                ...formStyles.input,
-                                ...(errors.firstName || errors.duplicateName ? formStyles.errorBorder : {})
-                            }}
-                            type="text"
-                            value={formData.firstName}
-                            onChange={e => {
-                                setFormData(prev => ({ ...prev, firstName: e.target.value }));
-                                if (errors.firstName) {
-                                    setErrors(prev => ({ ...prev, firstName: undefined, duplicateName: undefined }));
-                                } else if (errors.duplicateName) {
-                                    setErrors(prev => ({ ...prev, duplicateName: undefined }));
-                                }
-                            }}
-                        />
-                        {errors.firstName && <div style={formStyles.error}>{errors.firstName}</div>}
-                        {errors.duplicateName && <div style={formStyles.error}>{errors.duplicateName}</div>}
-                    </div>
+                <div style={formStyles.field}>
+                    <label style={formStyles.label}>First Name *</label>
+                    <input
+                        style={{
+                            ...formStyles.input,
+                            ...(errors.firstName || errors.duplicateName ? formStyles.errorBorder : {})
+                        }}
+                        type="text"
+                        value={formData.firstName}
+                        onChange={e => {
+                            setFormData(prev => ({ ...prev, firstName: e.target.value }));
+                            if (errors.firstName) {
+                                setErrors(prev => ({ ...prev, firstName: undefined, duplicateName: undefined }));
+                            } else if (errors.duplicateName) {
+                                setErrors(prev => ({ ...prev, duplicateName: undefined }));
+                            }
+                        }}
+                    />
+                    {errors.firstName && <div style={formStyles.error}>{errors.firstName}</div>}
+                    {errors.duplicateName && <div style={formStyles.error}>{errors.duplicateName}</div>}
+                </div>
 
-                    <div style={formStyles.field}>
-                        <label style={formStyles.label}>Last Name *</label>
-                        <input
-                            style={{
-                                ...formStyles.input,
-                                ...(errors.lastName || errors.duplicateName ? formStyles.errorBorder : {})
-                            }}
-                            type="text"
-                            value={formData.lastName}
-                            onChange={e => {
-                                setFormData(prev => ({ ...prev, lastName: e.target.value }));
-                                if (errors.lastName) {
-                                    setErrors(prev => ({ ...prev, lastName: undefined, duplicateName: undefined }));
-                                } else if (errors.duplicateName) {
-                                    setErrors(prev => ({ ...prev, duplicateName: undefined }));
-                                }
-                            }}
-                        />
-                        {errors.lastName && <div style={formStyles.error}>{errors.lastName}</div>}
-                        {errors.duplicateName && <div style={formStyles.error}>{errors.duplicateName}</div>}
+                <div style={formStyles.field}>
+                    <label style={formStyles.label}>Last Name *</label>
+                    <input
+                        style={{
+                            ...formStyles.input,
+                            ...(errors.lastName || errors.duplicateName ? formStyles.errorBorder : {})
+                        }}
+                        type="text"
+                        value={formData.lastName}
+                        onChange={e => {
+                            setFormData(prev => ({ ...prev, lastName: e.target.value }));
+                            if (errors.lastName) {
+                                setErrors(prev => ({ ...prev, lastName: undefined, duplicateName: undefined }));
+                            } else if (errors.duplicateName) {
+                                setErrors(prev => ({ ...prev, duplicateName: undefined }));
+                            }
+                        }}
+                    />
+                    {errors.lastName && <div style={formStyles.error}>{errors.lastName}</div>}
+                    {errors.duplicateName && <div style={formStyles.error}>{errors.duplicateName}</div>}
                 </div>
 
                 <div style={formStyles.field}>
