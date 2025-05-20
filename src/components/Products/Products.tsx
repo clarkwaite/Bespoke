@@ -5,11 +5,12 @@ import { formStyles } from '../shared/styles'
 import { ProductsModal } from './ProductsModal'
 import DeleteConfirmationModal from '../shared/DeleteConfirmationModal'
 import { NotificationDisplay, useNotification } from '../../hooks/useNotification'
+import { PRODUCTS_QUERY_KEY } from '../shared/constants'
+import { LoadingState } from '../shared/LoadingState'
+import { EmptyState } from '../shared/EmptyState'
 
 
 type ProductResponse = Product[]
-
-const PRODUCTS_QUERY_KEY = ['products'] as const
 
 const Products: React.FC = () => {
     const queryClient = useQueryClient()
@@ -119,7 +120,6 @@ const Products: React.FC = () => {
                 onClose={() => setDeleteModalOpen(false)}
                 onConfirm={handleConfirmDelete}
                 itemName={productToDelete?.name || 'this product'}
-                itemType="product"
             />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -132,63 +132,60 @@ const Products: React.FC = () => {
                 </button>
             </div>
 
-            {isLoading ? (
-                <div style={{ textAlign: 'center', padding: '20px' }}>Loading products...</div>
-            ) : products.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '20px' }}>No products found.</div>
-            ) : (
-                <table style={formStyles.table}>
-                    <thead>
-                        <tr>
-                            <th style={formStyles.th}>Name</th>
-                            <th style={formStyles.th}>Manufacturer</th>
-                            <th style={formStyles.th}>Style</th>
-                            <th style={{ ...formStyles.th, textAlign: 'right' }}>Purchase Price</th>
-                            <th style={{ ...formStyles.th, textAlign: 'right' }}>Sale Price</th>
-                            <th style={{ ...formStyles.th, textAlign: 'right' }}>Quantity</th>
-                            <th style={{ ...formStyles.th, textAlign: 'right' }}>Commission %</th>
-                            <th style={{ ...formStyles.th, textAlign: 'center' }}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {products.map(product => (
-                            <tr key={product.id}>
-                                <td style={formStyles.td}>{product.name}</td>
-                                <td style={formStyles.td}>{product.manufacturer}</td>
-                                <td style={formStyles.td}>{product.style}</td>
-                                <td style={{ ...formStyles.td, textAlign: 'right' }}>
-                                    ${product.purchasePrice.toFixed(2)}
-                                </td>
-                                <td style={{ ...formStyles.td, textAlign: 'right' }}>
-                                    ${product.salePrice.toFixed(2)}
-                                </td>
-                                <td style={{ ...formStyles.td, textAlign: 'right' }}>
-                                    {product.qtyOnHand}
-                                </td>
-                                <td style={{ ...formStyles.td, textAlign: 'right' }}>
-                                    {product.commissionPercentage}%
-                                </td>
-                                <td style={{ ...formStyles.td, textAlign: 'center' }}>
-                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                                        <button
-                                            onClick={() => openProductModal(product)}
-                                            style={{ ...formStyles.button, ...formStyles.saveButton }}
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteClick(product)}
-                                            style={formStyles.deleteButton}
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
-                                </td>
+            {isLoading ? <LoadingState message='products' /> : !products.length ? <EmptyState message='products' /> :
+                (
+                    <table style={formStyles.table}>
+                        <thead>
+                            <tr>
+                                <th style={formStyles.th}>Name</th>
+                                <th style={formStyles.th}>Manufacturer</th>
+                                <th style={formStyles.th}>Style</th>
+                                <th style={{ ...formStyles.th, textAlign: 'right' }}>Purchase Price</th>
+                                <th style={{ ...formStyles.th, textAlign: 'right' }}>Sale Price</th>
+                                <th style={{ ...formStyles.th, textAlign: 'right' }}>Quantity</th>
+                                <th style={{ ...formStyles.th, textAlign: 'right' }}>Commission %</th>
+                                <th style={{ ...formStyles.th, textAlign: 'center' }}>Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
+                        </thead>
+                        <tbody>
+                            {products.map(product => (
+                                <tr key={product.id}>
+                                    <td style={formStyles.td}>{product.name}</td>
+                                    <td style={formStyles.td}>{product.manufacturer}</td>
+                                    <td style={formStyles.td}>{product.style}</td>
+                                    <td style={{ ...formStyles.td, textAlign: 'right' }}>
+                                        ${product.purchasePrice.toFixed(2)}
+                                    </td>
+                                    <td style={{ ...formStyles.td, textAlign: 'right' }}>
+                                        ${product.salePrice.toFixed(2)}
+                                    </td>
+                                    <td style={{ ...formStyles.td, textAlign: 'right' }}>
+                                        {product.qtyOnHand}
+                                    </td>
+                                    <td style={{ ...formStyles.td, textAlign: 'right' }}>
+                                        {product.commissionPercentage}%
+                                    </td>
+                                    <td style={{ ...formStyles.td, textAlign: 'center' }}>
+                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                            <button
+                                                onClick={() => openProductModal(product)}
+                                                style={{ ...formStyles.button, ...formStyles.saveButton }}
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteClick(product)}
+                                                style={formStyles.deleteButton}
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
         </div>
     )
 }

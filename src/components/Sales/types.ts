@@ -5,3 +5,8 @@ export type SaleFormData = {
     date: string;
     id?: number;
 };
+
+export type DateRange = {
+    startDate: string
+    endDate: string
+}

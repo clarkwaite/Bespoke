@@ -5,8 +5,9 @@ import { formStyles } from '../shared/styles'
 import { SalespersonsModal } from './SalespersonsModal'
 import DeleteConfirmationModal from '../shared/DeleteConfirmationModal'
 import { NotificationDisplay, useNotification } from '../../hooks/useNotification'
-
-const SALESPERSONS_QUERY_KEY = ['salespersons'] as const
+import { SALESPERSONS_QUERY_KEY } from '../shared/constants'
+import { LoadingState } from '../shared/LoadingState'
+import { EmptyState } from '../shared/EmptyState'
 
 const Salespersons: React.FC = () => {
     const queryClient = useQueryClient()
@@ -137,7 +138,6 @@ const Salespersons: React.FC = () => {
                 onClose={() => setDeleteModalOpen(false)}
                 onConfirm={handleConfirmDelete}
                 itemName={salespersonToDelete ? `${salespersonToDelete.firstName} ${salespersonToDelete.lastName}` : 'this salesperson'}
-                itemType="salesperson"
             />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -150,11 +150,7 @@ const Salespersons: React.FC = () => {
                 </button>
             </div>
 
-            {isLoading ? (
-                <div style={{ textAlign: 'center', padding: '20px' }}>Loading salespersons...</div>
-            ) : salespersons.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '20px' }}>No salespersons found.</div>
-            ) : (
+            {isLoading ? <LoadingState message='salespersons' /> : !salespersons.length ? <EmptyState message='salespersons' /> : (
                 <table style={formStyles.table}>
                     <thead>
                         <tr>

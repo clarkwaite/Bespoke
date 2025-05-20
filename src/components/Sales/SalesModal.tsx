@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { formStyles } from "../shared/styles"
 import Modal from "../shared/Modal"
 import { SaleFormData } from './types'
+import { useQuery } from '@tanstack/react-query'
+import { CUSTOMERS_QUERY_KEY, PRODUCTS_QUERY_KEY, SALESPERSONS_QUERY_KEY } from '../shared/constants'
+import { Customer, Product, Salesperson } from '../../types'
 
 type ValidationErrors = {
     productId?: string
@@ -15,21 +18,6 @@ type SaleModalProps = {
     setIsModalOpen: (isOpen: boolean) => void
     handleSave: (sale: SaleFormData) => void
     isEditMode: boolean
-    products: {
-        id: number
-        name: string
-        salePrice: number
-    }[]
-    salespersons: {
-        id: number
-        firstName: string
-        lastName: string
-    }[]
-    customers: {
-        id: number
-        firstName: string
-        lastName: string
-    }[]
 }
 
 export const SalesModal = ({
@@ -37,9 +25,6 @@ export const SalesModal = ({
     setIsModalOpen,
     handleSave,
     isEditMode,
-    products,
-    salespersons,
-    customers
 }: SaleModalProps) => {
     const [formData, setFormData] = useState<SaleFormData>({
         productId: 0,
@@ -49,6 +34,39 @@ export const SalesModal = ({
     })
     const [errors, setErrors] = useState<ValidationErrors>({})
     const [isSubmitting, setIsSubmitting] = useState(false)
+
+    const { data: products = [] } = useQuery({
+        queryKey: PRODUCTS_QUERY_KEY,
+        queryFn: async () => {
+            const response = await fetch('/api/products')
+            if (!response.ok) {
+                throw new Error('Failed to fetch products')
+            }
+            return response.json() as Promise<Product[]>
+        }
+    })
+
+    const { data: salespersons = [] } = useQuery({
+        queryKey: SALESPERSONS_QUERY_KEY,
+        queryFn: async () => {
+            const response = await fetch('/api/salespersons')
+            if (!response.ok) {
+                throw new Error('Failed to fetch salespersons')
+            }
+            return response.json() as Promise<Salesperson[]>
+        }
+    })
+
+    const { data: customers = [] } = useQuery({
+        queryKey: CUSTOMERS_QUERY_KEY,
+        queryFn: async () => {
+            const response = await fetch('/api/customers')
+            if (!response.ok) {
+                throw new Error('Failed to fetch customers')
+            }
+            return response.json() as Promise<Customer[]>
+        }
+    })
 
     useEffect(() => {
         setFormData({

@@ -7,7 +7,6 @@ interface DeleteConfirmationModalProps {
     onConfirm: () => void
     title?: string
     itemName: string
-    itemType: string
 }
 
 export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
@@ -16,7 +15,6 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
     onConfirm,
     title = 'Confirm Delete',
     itemName,
-    itemType
 }) => {
     return (
         <Modal

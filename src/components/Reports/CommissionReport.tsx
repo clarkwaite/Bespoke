@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { CommissionReport, Salesperson, Sale } from '../../types'
 import Modal from '../shared/Modal'
 import { formStyles } from '../shared/styles'
+import { LoadingState } from '../shared/LoadingState'
+import { EmptyCommissionReportState } from '../shared/EmptyState'
 
 const SALES_QUERY_KEY = ['sales']
 const SALESPERSONS_QUERY_KEY = ['salespersons']
@@ -234,19 +236,15 @@ const CommissionReports: React.FC = () => {
             </div>
 
             {isLoading ? (
-                <div style={{ textAlign: 'center', padding: '20px' }}>Loading commission reports...</div>
+                <LoadingState message='commission reports' />
             ) : !reports.length ? (
-                <div style={{ textAlign: 'center', padding: '20px' }}>
-                    <div>No commission reports found for Q{appliedQuarter} {appliedYear}.</div>
-                    {(appliedYear !== currentYear || appliedQuarter !== currentQuarter) && (
-                        <button
-                            onClick={handleClearFilter}
-                            style={{ ...formStyles.button, marginTop: '10px' }}
-                        >
-                            Return to Current Quarter
-                        </button>
-                    )}
-                </div>
+                <EmptyCommissionReportState
+                    appliedQuarter={appliedQuarter}
+                    appliedYear={appliedYear}
+                    currentYear={currentYear}
+                    currentQuarter={currentQuarter}
+                    handleClearFilter={handleClearFilter}
+                />
             ) : (
                 <table style={formStyles.table}>
                     <thead>

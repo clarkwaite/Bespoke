@@ -1,21 +1,12 @@
 import React, { useState } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
-import { Sale, Customer, Product, Salesperson } from '../../types'
+import { Sale } from '../../types'
 import { formStyles } from '../shared/styles'
 import { SalesModal } from './SalesModal'
-import { SaleFormData } from './types'
+import { DateRange, SaleFormData } from './types'
 import { isBetweenTwoDates } from '../shared/helpers'
 import { NotificationDisplay, useNotification } from '../../hooks/useNotification'
-
-type DateRange = {
-    startDate: string
-    endDate: string
-}
-
-const SALES_QUERY_KEY = ['sales'] as const
-const PRODUCTS_QUERY_KEY = ['products'] as const
-const CUSTOMERS_QUERY_KEY = ['customers'] as const
-const SALESPERSONS_QUERY_KEY = ['salespersons'] as const
+import { SALES_QUERY_KEY } from '../shared/constants'
 
 const Sales: React.FC = () => {
     const queryClient = useQueryClient()
@@ -32,39 +23,6 @@ const Sales: React.FC = () => {
                 throw new Error('Failed to fetch sales')
             }
             return response.json() as Promise<Sale[]>
-        }
-    })
-
-    const { data: products = [] } = useQuery({
-        queryKey: PRODUCTS_QUERY_KEY,
-        queryFn: async () => {
-            const response = await fetch('/api/products')
-            if (!response.ok) {
-                throw new Error('Failed to fetch products')
-            }
-            return response.json() as Promise<Product[]>
-        }
-    })
-
-    const { data: salespersons = [] } = useQuery({
-        queryKey: SALESPERSONS_QUERY_KEY,
-        queryFn: async () => {
-            const response = await fetch('/api/salespersons')
-            if (!response.ok) {
-                throw new Error('Failed to fetch salespersons')
-            }
-            return response.json() as Promise<Salesperson[]>
-        }
-    })
-
-    const { data: customers = [] } = useQuery({
-        queryKey: CUSTOMERS_QUERY_KEY,
-        queryFn: async () => {
-            const response = await fetch('/api/customers')
-            if (!response.ok) {
-                throw new Error('Failed to fetch customers')
-            }
-            return response.json() as Promise<Customer[]>
         }
     })
 
@@ -124,9 +82,6 @@ const Sales: React.FC = () => {
             <SalesModal
                 isModalOpen={isAddModalOpen}
                 setIsModalOpen={setIsAddModalOpen}
-                products={products}
-                salespersons={salespersons}
-                customers={customers}
                 handleSave={createSale}
                 isEditMode={false}
             />

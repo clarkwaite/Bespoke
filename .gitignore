@@ -26,6 +26,7 @@ npm-debug.log*
 
 # TypeScript
 *.tsbuildinfo
+prettier.config.ts
 
 # Optional npm cache directory
 .npm
