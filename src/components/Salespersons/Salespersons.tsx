@@ -3,24 +3,18 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { Salesperson } from '../../types'
 import { formStyles } from '../shared/styles'
 import { SalespersonsModal } from './SalespersonsModal'
+import DeleteConfirmationModal from '../shared/DeleteConfirmationModal'
+import { NotificationDisplay, useNotification } from '../../hooks/useNotification'
 
-type ErrorMessage = {
-    message: string
-    type: 'error' | 'success'
-}
-
-const SALESPERSONS_QUERY_KEY = ['salespersons']
+const SALESPERSONS_QUERY_KEY = ['salespersons'] as const
 
 const Salespersons: React.FC = () => {
     const queryClient = useQueryClient()
     const [editingSalesperson, setEditingSalesperson] = useState<Salesperson | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [notification, setNotification] = useState<ErrorMessage | null>(null)
-
-    const showNotification = useCallback((message: string, type: 'error' | 'success') => {
-        setNotification({ message, type })
-        setTimeout(() => setNotification(null), 5000)
-    }, [])
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+    const [salespersonToDelete, setSalespersonToDelete] = useState<Salesperson | null>(null)
+    const { notification, showNotification } = useNotification()
 
     const { data: salespersons = [], isLoading } = useQuery({
         queryKey: SALESPERSONS_QUERY_KEY,
@@ -112,27 +106,21 @@ const Salespersons: React.FC = () => {
         saveSalesperson(salesperson)
     }, [saveSalesperson])
 
-    const handleDeleteSalesperson = useCallback(async (salespersonId: number) => {
-        if (!window.confirm('Are you sure you want to delete this salesperson?')) {
-            return
+    const handleDeleteClick = useCallback((salesperson: Salesperson) => {
+        setSalespersonToDelete(salesperson)
+        setDeleteModalOpen(true)
+    }, [])
+
+    const handleConfirmDelete = useCallback(() => {
+        if (salespersonToDelete) {
+            deleteSalesperson(salespersonToDelete.id)
         }
-        deleteSalesperson(salespersonId)
-    }, [deleteSalesperson])
+    }, [deleteSalesperson, salespersonToDelete])
 
     return (
         <div>
             {notification && (
-                <div
-                    style={{
-                        padding: '10px',
-                        marginBottom: '20px',
-                        borderRadius: '4px',
-                        backgroundColor: notification.type === 'error' ? '#fee2e2' : '#dcfce7',
-                        color: notification.type === 'error' ? '#dc2626' : '#16a34a',
-                    }}
-                >
-                    {notification.message}
-                </div>
+                <NotificationDisplay notification={notification} />
             )}
 
             <SalespersonsModal
@@ -142,6 +130,14 @@ const Salespersons: React.FC = () => {
                 handleSave={handleSaveSalesperson}
                 isEditMode={Boolean(editingSalesperson)}
                 existingSalespersons={salespersons}
+            />
+
+            <DeleteConfirmationModal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                itemName={salespersonToDelete ? `${salespersonToDelete.firstName} ${salespersonToDelete.lastName}` : 'this salesperson'}
+                itemType="salesperson"
             />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -196,7 +192,7 @@ const Salespersons: React.FC = () => {
                                             Edit
                                         </button>
                                         <button
-                                            onClick={() => handleDeleteSalesperson(salesperson.id)}
+                                            onClick={() => handleDeleteClick(salesperson)}
                                             style={formStyles.deleteButton}
                                         >
                                             Delete

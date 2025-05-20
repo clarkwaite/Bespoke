@@ -3,26 +3,21 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { Customer } from '../../types'
 import { formStyles } from '../shared/styles'
 import { CustomersModal } from './CustomersModal'
+import DeleteConfirmationModal from '../shared/DeleteConfirmationModal'
+import { NotificationDisplay, useNotification } from '../../hooks/useNotification'
 
-type ErrorMessage = {
-    message: string
-    type: 'error' | 'success'
-}
-
-const CUSTOMERS_QUERY_KEY = ['customers'] as const
 
 type CustomerResponse = Customer[]
 
-const Customers = () => {
+const CUSTOMERS_QUERY_KEY = ['customers'] as const
+
+const Customers: React.FC = () => {
     const queryClient = useQueryClient()
     const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [notification, setNotification] = useState<ErrorMessage | null>(null)
-
-    const showNotification = useCallback((message: string, type: 'error' | 'success') => {
-        setNotification({ message, type })
-        setTimeout(() => setNotification(null), 5000)
-    }, [])
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+    const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null)
+    const { notification, showNotification } = useNotification()
 
     const { data: customers = [], isLoading } = useQuery({
         queryKey: CUSTOMERS_QUERY_KEY,
@@ -31,8 +26,7 @@ const Customers = () => {
             if (!response.ok) {
                 throw new Error('Failed to fetch customers')
             }
-            const data = await response.json()
-            return data as CustomerResponse
+            return response.json() as Promise<CustomerResponse>
         }
     })
 
@@ -44,14 +38,16 @@ const Customers = () => {
                 {
                     method: isUpdate ? 'PUT' : 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(customer),
+                    body: JSON.stringify(customer)
                 }
             )
 
+            // For successful updates without response body, return original customer
             if (response.ok && response.status === 204) {
                 return customer as Customer
             }
 
+            // For other cases, try to parse response or return original
             return response.ok ? (await response.json() as Customer) : customer as Customer
         },
         onSuccess: (_, variables) => {
@@ -60,8 +56,8 @@ const Customers = () => {
             showNotification(`Customer ${isUpdate ? 'updated' : 'added'} successfully`, 'success')
             setIsModalOpen(false)
         },
-        onError: () => {
-            showNotification('Failed to save customer', 'error')
+        onError: (error) => {
+            showNotification(error instanceof Error ? error.message : 'Failed to save customer', 'error')
         }
     })
 
@@ -81,6 +77,9 @@ const Customers = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: CUSTOMERS_QUERY_KEY })
             showNotification('Customer deleted successfully', 'success')
+        },
+        onError: (error) => {
+            showNotification(error instanceof Error ? error.message : 'Failed to delete customer', 'error')
         }
     })
 
@@ -93,28 +92,20 @@ const Customers = () => {
         saveCustomer(customer)
     }, [saveCustomer])
 
-    const handleDeleteCustomer = useCallback(async (customerId: number) => {
-        if (!window.confirm('Are you sure you want to delete this customer?')) {
-            return
+    const handleDeleteClick = useCallback((customer: Customer) => {
+        setCustomerToDelete(customer)
+        setDeleteModalOpen(true)
+    }, [])
+
+    const handleConfirmDelete = useCallback(() => {
+        if (customerToDelete) {
+            deleteCustomer(customerToDelete.id)
         }
-        deleteCustomer(customerId)
-    }, [deleteCustomer])
+    }, [deleteCustomer, customerToDelete])
 
     return (
         <div>
-            {notification && (
-                <div
-                    style={{
-                        padding: '10px',
-                        marginBottom: '20px',
-                        borderRadius: '4px',
-                        backgroundColor: notification.type === 'error' ? '#fee2e2' : '#dcfce7',
-                        color: notification.type === 'error' ? '#dc2626' : '#16a34a',
-                    }}
-                >
-                    {notification.message}
-                </div>
-            )}
+            <NotificationDisplay notification={notification} />
 
             <CustomersModal
                 isModalOpen={isModalOpen}
@@ -122,6 +113,14 @@ const Customers = () => {
                 customer={editingCustomer}
                 isEditMode={Boolean(editingCustomer)}
                 handleSave={handleSaveCustomer}
+            />
+
+            <DeleteConfirmationModal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                itemName={customerToDelete ? `${customerToDelete.firstName} ${customerToDelete.lastName}` : 'this customer'}
+                itemType="customer"
             />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -139,14 +138,14 @@ const Customers = () => {
             ) : customers.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '20px' }}>No customers found.</div>
             ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table style={formStyles.table}>
                     <thead>
                         <tr>
-                            <th style={{ textAlign: 'left', padding: '12px', borderBottom: '2px solid #ddd' }}>Name</th>
-                            <th style={{ textAlign: 'left', padding: '12px', borderBottom: '2px solid #ddd' }}>Address</th>
-                            <th style={{ textAlign: 'left', padding: '12px', borderBottom: '2px solid #ddd' }}>Phone</th>
-                            <th style={{ textAlign: 'left', padding: '12px', borderBottom: '2px solid #ddd' }}>Start Date</th>
-                            <th style={{ textAlign: 'left', padding: '12px', borderBottom: '2px solid #ddd' }}>Actions</th>
+                            <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Name</th>
+                            <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Address</th>
+                            <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Phone</th>
+                            <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Start Date</th>
+                            <th style={{ padding: '12px', borderBottom: '2px solid #ddd' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -169,7 +168,7 @@ const Customers = () => {
                                             Edit
                                         </button>
                                         <button
-                                            onClick={() => handleDeleteCustomer(customer.id)}
+                                            onClick={() => handleDeleteClick(customer)}
                                             style={formStyles.deleteButton}
                                         >
                                             Delete

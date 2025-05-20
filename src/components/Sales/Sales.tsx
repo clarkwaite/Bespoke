@@ -1,37 +1,28 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
-import { Sale, SaleFormData, DateRangeFilter, Product, Salesperson, Customer } from '../../types'
+import { Sale, Customer, Product, Salesperson } from '../../types'
 import { formStyles } from '../shared/styles'
 import { SalesModal } from './SalesModal'
+import { SaleFormData } from './types'
 import { isBetweenTwoDates } from '../shared/helpers'
+import { NotificationDisplay, useNotification } from '../../hooks/useNotification'
 
-type ErrorMessage = {
-    message: string
-    type: 'error' | 'success'
+type DateRange = {
+    startDate: string
+    endDate: string
 }
 
-const SALES_QUERY_KEY = ['sales']
-const PRODUCTS_QUERY_KEY = ['products']
-const SALESPERSONS_QUERY_KEY = ['salespersons']
-const CUSTOMERS_QUERY_KEY = ['customers']
+const SALES_QUERY_KEY = ['sales'] as const
+const PRODUCTS_QUERY_KEY = ['products'] as const
+const CUSTOMERS_QUERY_KEY = ['customers'] as const
+const SALESPERSONS_QUERY_KEY = ['salespersons'] as const
 
 const Sales: React.FC = () => {
     const queryClient = useQueryClient()
-    const [dateFilter, setDateFilter] = useState<DateRangeFilter>({
-        startDate: '',
-        endDate: ''
-    })
-    const [appliedDateFilter, setAppliedDateFilter] = useState<DateRangeFilter>({
-        startDate: '',
-        endDate: ''
-    })
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-    const [notification, setNotification] = useState<ErrorMessage | null>(null)
-
-    const showNotification = useCallback((message: string, type: 'error' | 'success') => {
-        setNotification({ message, type })
-        setTimeout(() => setNotification(null), 5000)
-    }, [])
+    const [dateFilter, setDateFilter] = useState<DateRange>({ startDate: '', endDate: '' })
+    const [appliedDateFilter, setAppliedDateFilter] = useState<DateRange>({ startDate: '', endDate: '' })
+    const { notification, showNotification } = useNotification()
 
     const { data: sales = [], isLoading: isSalesLoading } = useQuery({
         queryKey: SALES_QUERY_KEY,
@@ -128,19 +119,7 @@ const Sales: React.FC = () => {
 
     return (
         <div>
-            {notification && (
-                <div
-                    style={{
-                        padding: '10px',
-                        marginBottom: '20px',
-                        borderRadius: '4px',
-                        backgroundColor: notification.type === 'error' ? '#fee2e2' : '#dcfce7',
-                        color: notification.type === 'error' ? '#dc2626' : '#16a34a',
-                    }}
-                >
-                    {notification.message}
-                </div>
-            )}
+            <NotificationDisplay notification={notification} />
 
             <SalesModal
                 isModalOpen={isAddModalOpen}

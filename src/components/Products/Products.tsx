@@ -3,26 +3,21 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { Product } from '../../types'
 import { formStyles } from '../shared/styles'
 import { ProductsModal } from './ProductsModal'
+import DeleteConfirmationModal from '../shared/DeleteConfirmationModal'
+import { NotificationDisplay, useNotification } from '../../hooks/useNotification'
 
-type ErrorMessage = {
-    message: string
-    type: 'error' | 'success'
-}
-
-const PRODUCTS_QUERY_KEY = ['products'] as const
 
 type ProductResponse = Product[]
+
+const PRODUCTS_QUERY_KEY = ['products'] as const
 
 const Products: React.FC = () => {
     const queryClient = useQueryClient()
     const [editingProduct, setEditingProduct] = useState<Product | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [notification, setNotification] = useState<ErrorMessage | null>(null)
-
-    const showNotification = useCallback((message: string, type: 'error' | 'success') => {
-        setNotification({ message, type })
-        setTimeout(() => setNotification(null), 5000)
-    }, [])
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+    const [productToDelete, setProductToDelete] = useState<Product | null>(null)
+    const { notification, showNotification } = useNotification()
 
     const { data: products = [], isLoading } = useQuery({
         queryKey: PRODUCTS_QUERY_KEY,
@@ -93,27 +88,21 @@ const Products: React.FC = () => {
         saveProduct(product)
     }, [saveProduct])
 
-    const handleDeleteProduct = useCallback(async (productId: number) => {
-        if (!window.confirm('Are you sure you want to delete this product?')) {
-            return
+    const handleDeleteClick = useCallback((product: Product) => {
+        setProductToDelete(product)
+        setDeleteModalOpen(true)
+    }, [])
+
+    const handleConfirmDelete = useCallback(() => {
+        if (productToDelete) {
+            deleteProduct(productToDelete.id)
         }
-        deleteProduct(productId)
-    }, [deleteProduct])
+    }, [deleteProduct, productToDelete])
 
     return (
         <div>
             {notification && (
-                <div
-                    style={{
-                        padding: '10px',
-                        marginBottom: '20px',
-                        borderRadius: '4px',
-                        backgroundColor: notification.type === 'error' ? '#fee2e2' : '#dcfce7',
-                        color: notification.type === 'error' ? '#dc2626' : '#16a34a',
-                    }}
-                >
-                    {notification.message}
-                </div>
+                <NotificationDisplay notification={notification} />
             )}
 
             <ProductsModal
@@ -123,6 +112,14 @@ const Products: React.FC = () => {
                 handleSave={handleSaveProduct}
                 isEditMode={Boolean(editingProduct)}
                 existingProducts={products}
+            />
+
+            <DeleteConfirmationModal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                itemName={productToDelete?.name || 'this product'}
+                itemType="product"
             />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -180,7 +177,7 @@ const Products: React.FC = () => {
                                             Edit
                                         </button>
                                         <button
-                                            onClick={() => handleDeleteProduct(product.id)}
+                                            onClick={() => handleDeleteClick(product)}
                                             style={formStyles.deleteButton}
                                         >
                                             Delete

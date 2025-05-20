@@ -27,8 +27,10 @@ interface ModalProps {
   title: string
   message?: string
   confirmLabel?: string
+  cancelLabel?: string
   children?: React.ReactNode
   showConfirmButton?: boolean
+  onConfirm?: () => void
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -37,8 +39,10 @@ const Modal: React.FC<ModalProps> = ({
   title,
   message,
   confirmLabel = 'OK',
+  cancelLabel = 'Cancel',
   children,
-  showConfirmButton = true
+  showConfirmButton = true,
+  onConfirm
 }) => {
   return (
     <ReactModal
@@ -50,25 +54,45 @@ const Modal: React.FC<ModalProps> = ({
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h2 style={{ margin: 0 }}>{title}</h2>
-          <button
-            onClick={onRequestClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '20px',
-              cursor: 'pointer',
-              padding: '5px'
-            }}
-          >
-            ×
-          </button>
+          {!showConfirmButton && (
+            <button
+              onClick={onRequestClose}
+              style={{
+                background: 'none',
+                border: 'none',
+                fontSize: '20px',
+                cursor: 'pointer',
+                padding: '5px'
+              }}
+            >
+              ×
+            </button>
+          )}
         </div>
         {message && <p>{message}</p>}
         {children}
         {showConfirmButton && (
-          <div style={{ textAlign: 'right', marginTop: '20px' }}>
+          <div style={{ textAlign: 'right', marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
             <button
               onClick={onRequestClose}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#dc3545',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              {cancelLabel}
+            </button>
+            <button
+              onClick={() => {
+                if (onConfirm) {
+                  onConfirm()
+                }
+                onRequestClose()
+              }}
               style={{
                 padding: '8px 16px',
                 backgroundColor: '#007bff',
