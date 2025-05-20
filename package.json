@@ -4,6 +4,7 @@
   "private": true,
   "proxy": "https://profiseebespokedbikesapi.azurewebsites.net",
   "dependencies": {
+    "@tanstack/react-query": "^5.76.1",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-modal": "^3.16.3",

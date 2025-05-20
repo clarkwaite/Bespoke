@@ -1,35 +1,35 @@
-import { useState, useEffect } from 'react';
-import { formStyles } from "../shared/styles";
-import Modal from "../shared/Modal";
-import { SaleFormData } from './types';
+import { useState, useEffect } from 'react'
+import { formStyles } from "../shared/styles"
+import Modal from "../shared/Modal"
+import { SaleFormData } from './types'
 
 type ValidationErrors = {
-    productId?: string;
-    salesPersonId?: string;
-    customerId?: string;
-    date?: string;
-};
+    productId?: string
+    salesPersonId?: string
+    customerId?: string
+    date?: string
+}
 
 type SaleModalProps = {
-    isModalOpen: boolean;
-    setIsModalOpen: (isOpen: boolean) => void;
-    handleSave: (sale: SaleFormData) => void;
-    isEditMode: boolean;
+    isModalOpen: boolean
+    setIsModalOpen: (isOpen: boolean) => void
+    handleSave: (sale: SaleFormData) => void
+    isEditMode: boolean
     products: {
-        id: number;
-        name: string;
-        salePrice: number;
-    }[];
+        id: number
+        name: string
+        salePrice: number
+    }[]
     salespersons: {
-        id: number;
-        firstName: string;
-        lastName: string;
-    }[];
+        id: number
+        firstName: string
+        lastName: string
+    }[]
     customers: {
-        id: number;
-        firstName: string;
-        lastName: string;
-    }[];
+        id: number
+        firstName: string
+        lastName: string
+    }[]
 }
 
 export const SalesModal = ({
@@ -46,9 +46,9 @@ export const SalesModal = ({
         salesPersonId: 0,
         customerId: 0,
         date: new Date().toISOString().split('T')[0]
-    });
-    const [errors, setErrors] = useState<ValidationErrors>({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    })
+    const [errors, setErrors] = useState<ValidationErrors>({})
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     useEffect(() => {
         setFormData({
@@ -56,47 +56,47 @@ export const SalesModal = ({
             salesPersonId: 0,
             customerId: 0,
             date: new Date().toISOString().split('T')[0]
-        });
-        setErrors({});
-    }, [isModalOpen]);
+        })
+        setErrors({})
+    }, [isModalOpen])
 
     const validateForm = (): boolean => {
-        const newErrors: ValidationErrors = {};
+        const newErrors: ValidationErrors = {}
 
         if (!formData.productId) {
-            newErrors.productId = 'Product selection is required';
+            newErrors.productId = 'Product selection is required'
         }
 
         if (!formData.salesPersonId) {
-            newErrors.salesPersonId = 'Salesperson selection is required';
+            newErrors.salesPersonId = 'Salesperson selection is required'
         }
 
         if (!formData.customerId) {
-            newErrors.customerId = 'Customer selection is required';
+            newErrors.customerId = 'Customer selection is required'
         }
 
         if (!formData.date) {
-            newErrors.date = 'Sale date is required';
+            newErrors.date = 'Sale date is required'
         } else {
-            const saleDate = new Date(formData.date);
-            const today = new Date();
+            const saleDate = new Date(formData.date)
+            const today = new Date()
             if (saleDate > today) {
-                newErrors.date = 'Sale date cannot be in the future';
+                newErrors.date = 'Sale date cannot be in the future'
             }
         }
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
+    }
 
     const handleSubmit = () => {
         if (validateForm()) {
-            setIsSubmitting(true);
-            handleSave(formData);
-            setIsSubmitting(false);
-            setIsModalOpen(false);
+            setIsSubmitting(true)
+            handleSave(formData)
+            setIsSubmitting(false)
+            setIsModalOpen(false)
         }
-    };
+    }
 
     return (
         <Modal
@@ -115,9 +115,9 @@ export const SalesModal = ({
                         }}
                         value={formData.productId || ''}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, productId: parseInt(e.target.value) }));
+                            setFormData(prev => ({ ...prev, productId: parseInt(e.target.value) }))
                             if (errors.productId) {
-                                setErrors(prev => ({ ...prev, productId: undefined }));
+                                setErrors(prev => ({ ...prev, productId: undefined }))
                             }
                         }}
                     >
@@ -140,9 +140,9 @@ export const SalesModal = ({
                         }}
                         value={formData.salesPersonId || ''}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, salesPersonId: parseInt(e.target.value) }));
+                            setFormData(prev => ({ ...prev, salesPersonId: parseInt(e.target.value) }))
                             if (errors.salesPersonId) {
-                                setErrors(prev => ({ ...prev, salesPersonId: undefined }));
+                                setErrors(prev => ({ ...prev, salesPersonId: undefined }))
                             }
                         }}
                     >
@@ -165,9 +165,9 @@ export const SalesModal = ({
                         }}
                         value={formData.customerId || ''}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, customerId: parseInt(e.target.value) }));
+                            setFormData(prev => ({ ...prev, customerId: parseInt(e.target.value) }))
                             if (errors.customerId) {
-                                setErrors(prev => ({ ...prev, customerId: undefined }));
+                                setErrors(prev => ({ ...prev, customerId: undefined }))
                             }
                         }}
                     >
@@ -192,9 +192,9 @@ export const SalesModal = ({
                         value={formData.date}
                         max={new Date().toISOString().split('T')[0]}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, date: e.target.value }));
+                            setFormData(prev => ({ ...prev, date: e.target.value }))
                             if (errors.date) {
-                                setErrors(prev => ({ ...prev, date: undefined }));
+                                setErrors(prev => ({ ...prev, date: undefined }))
                             }
                         }}
                     />
@@ -219,5 +219,5 @@ export const SalesModal = ({
                 </div>
             </div>
         </Modal>
-    );
-};
+    )
+}

@@ -1,24 +1,24 @@
-import { useState, useEffect } from 'react';
-import { Customer } from "../../types";
-import { formStyles } from "../shared/styles";
+import { useState, useEffect } from 'react'
+import { Customer } from "../../types"
+import { formStyles } from "../shared/styles"
 import Modal from "../shared/Modal"
 
 type ValidationErrors = {
-    firstName?: string;
-    lastName?: string;
-    address?: string;
-    phone?: string;
-    startDate?: string;
-};
+    firstName?: string
+    lastName?: string
+    address?: string
+    phone?: string
+    startDate?: string
+}
 
-type CustomerFormData = Omit<Customer, 'id'> & { id?: number };
+type CustomerFormData = Omit<Customer, 'id'> & { id?: number }
 
 type CustomersModalType = {
-    isModalOpen: boolean;
-    setIsModalOpen: (isOpen: boolean) => void;
-    customer?: Customer | null;
-    handleSave: (customer: CustomerFormData) => void;
-    isEditMode: boolean;
+    isModalOpen: boolean
+    setIsModalOpen: (isOpen: boolean) => void
+    customer?: Customer | null
+    handleSave: (customer: CustomerFormData) => void
+    isEditMode: boolean
 }
 
 export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSave, isEditMode }: CustomersModalType) => {
@@ -28,16 +28,16 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
         address: '',
         phone: '',
         startDate: new Date().toISOString().split('T')[0]
-    });
-    const [errors, setErrors] = useState<ValidationErrors>({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    })
+    const [errors, setErrors] = useState<ValidationErrors>({})
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     useEffect(() => {
         if (customer) {
             setFormData({
                 ...customer,
                 startDate: customer.startDate.split('T')[0]
-            });
+            })
         } else {
             setFormData({
                 firstName: '',
@@ -45,46 +45,46 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
                 address: '',
                 phone: '',
                 startDate: new Date().toISOString().split('T')[0]
-            });
+            })
         }
-        setErrors({});
-    }, [customer, isModalOpen]);
+        setErrors({})
+    }, [customer, isModalOpen])
 
     const validateForm = (): boolean => {
-        const newErrors: ValidationErrors = {};
+        const newErrors: ValidationErrors = {}
         if (!formData.firstName.trim()) {
-            newErrors.firstName = 'First name is required';
+            newErrors.firstName = 'First name is required'
         }
         if (!formData.lastName.trim()) {
-            newErrors.lastName = 'Last name is required';
+            newErrors.lastName = 'Last name is required'
         }
         if (!formData.phone.trim()) {
-            newErrors.phone = 'Phone is required';
-        } else if (!/^\+?[\d\s-]+$/.test(formData.phone)) {
-            newErrors.phone = 'Invalid phone number format';
+            newErrors.phone = 'Phone is required'
+        } else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
+            newErrors.phone = 'Phone number must be 10 digits in length'
         }
         if (!formData.address.trim()) {
-            newErrors.address = 'Address is required';
+            newErrors.address = 'Address is required'
         }
         if (!formData.startDate) {
-            newErrors.startDate = 'Start date is required';
+            newErrors.startDate = 'Start date is required'
         }
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
+    }
 
     const handleSubmit = () => {
         if (validateForm()) {
-            setIsSubmitting(true);
+            setIsSubmitting(true)
             handleSave({
                 ...formData,
                 id: isEditMode ? customer?.id : undefined
-            });
-            setIsSubmitting(false);
-            setIsModalOpen(false);
+            })
+            setIsSubmitting(false)
+            setIsModalOpen(false)
         }
-    };
+    }
 
     return (
         <Modal
@@ -104,9 +104,9 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
                         type="text"
                         value={formData.firstName}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, firstName: e.target.value }));
+                            setFormData(prev => ({ ...prev, firstName: e.target.value }))
                             if (errors.firstName) {
-                                setErrors(prev => ({ ...prev, firstName: undefined }));
+                                setErrors(prev => ({ ...prev, firstName: undefined }))
                             }
                         }}
                     />
@@ -122,9 +122,9 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
                         type="text"
                         value={formData.lastName}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, lastName: e.target.value }));
+                            setFormData(prev => ({ ...prev, lastName: e.target.value }))
                             if (errors.lastName) {
-                                setErrors(prev => ({ ...prev, lastName: undefined }));
+                                setErrors(prev => ({ ...prev, lastName: undefined }))
                             }
                         }}
                     />
@@ -140,9 +140,9 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
                         type="text"
                         value={formData.address}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, address: e.target.value }));
+                            setFormData(prev => ({ ...prev, address: e.target.value }))
                             if (errors.address) {
-                                setErrors(prev => ({ ...prev, address: undefined }));
+                                setErrors(prev => ({ ...prev, address: undefined }))
                             }
                         }}
                     />
@@ -158,12 +158,12 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
                         type="text"
                         value={formData.phone}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, phone: e.target.value }));
+                            setFormData(prev => ({ ...prev, phone: e.target.value }))
                             if (errors.phone) {
-                                setErrors(prev => ({ ...prev, phone: undefined }));
+                                setErrors(prev => ({ ...prev, phone: undefined }))
                             }
                         }}
-                        placeholder="+1 234-567-8900"
+                        placeholder="234-567-8900"
                     />
                     {errors.phone && <div style={formStyles.error}>{errors.phone}</div>}
                 </div>
@@ -177,9 +177,9 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
                         type="date"
                         value={formData.startDate}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, startDate: e.target.value }));
+                            setFormData(prev => ({ ...prev, startDate: e.target.value }))
                             if (errors.startDate) {
-                                setErrors(prev => ({ ...prev, startDate: undefined }));
+                                setErrors(prev => ({ ...prev, startDate: undefined }))
                             }
                         }}
                     />
@@ -203,5 +203,5 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
                 </div>
             </div>
         </Modal>
-    );
+    )
 }

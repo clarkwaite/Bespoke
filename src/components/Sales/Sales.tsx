@@ -1,120 +1,118 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Sale, SaleFormData, DateRangeFilter, ApiResponse, Product, Salesperson, Customer } from '../../types';
-import { formStyles } from '../shared/styles';
-import { SalesModal } from './SalesModal';
-import { isBetweenTwoDates } from '../shared/helpers';
+import React, { useState, useCallback } from 'react'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { Sale, SaleFormData, DateRangeFilter, Product, Salesperson, Customer } from '../../types'
+import { formStyles } from '../shared/styles'
+import { SalesModal } from './SalesModal'
+import { isBetweenTwoDates } from '../shared/helpers'
 
 type ErrorMessage = {
-    message: string;
-    type: 'error' | 'success';
-};
+    message: string
+    type: 'error' | 'success'
+}
+
+const SALES_QUERY_KEY = ['sales']
+const PRODUCTS_QUERY_KEY = ['products']
+const SALESPERSONS_QUERY_KEY = ['salespersons']
+const CUSTOMERS_QUERY_KEY = ['customers']
 
 const Sales: React.FC = () => {
-    const [sales, setSales] = useState<Sale[]>([]);
+    const queryClient = useQueryClient()
     const [dateFilter, setDateFilter] = useState<DateRangeFilter>({
         startDate: '',
         endDate: ''
-    });
+    })
     const [appliedDateFilter, setAppliedDateFilter] = useState<DateRangeFilter>({
         startDate: '',
         endDate: ''
-    });
-    const [isLoading, setIsLoading] = useState(false);
-    const [notification, setNotification] = useState<ErrorMessage | null>(null);
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [products, setProducts] = useState<Product[]>([]);
-    const [salespersons, setSalespersons] = useState<Salesperson[]>([]);
-    const [customers, setCustomers] = useState<Customer[]>([]);
+    })
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+    const [notification, setNotification] = useState<ErrorMessage | null>(null)
 
-    // TODO: make this a reusable hook
     const showNotification = useCallback((message: string, type: 'error' | 'success') => {
-        setNotification({ message, type });
-        setTimeout(() => setNotification(null), 5000);
-    }, []);
+        setNotification({ message, type })
+        setTimeout(() => setNotification(null), 5000)
+    }, [])
 
-    // TODO: make all of these fetches a reusable hook
-    const fetchDropdownData = useCallback(async () => {
-        try {
-            // Fetch products
-            const productsResponse = await fetch('/api/products');
-            const productsData: Product[] = await productsResponse.json();
-            if (productsData.length) {
-                setProducts(productsData);
+    const { data: sales = [], isLoading: isSalesLoading } = useQuery({
+        queryKey: SALES_QUERY_KEY,
+        queryFn: async () => {
+            const response = await fetch('/api/sales')
+            if (!response.ok) {
+                throw new Error('Failed to fetch sales')
             }
-
-            // Fetch salespersons
-            const salespersonsResponse = await fetch('/api/salespersons');
-            const salespersonsData: Salesperson[] = await salespersonsResponse.json();
-            if (salespersonsData.length) {
-                setSalespersons(salespersonsData);
-            }
-
-            // Fetch customers
-            const customersResponse = await fetch('/api/customers');
-            const customersData: Customer[] = await customersResponse.json();
-            if (customersData.length) {
-                setCustomers(customersData);
-            }
-        } catch (error) {
-            console.error('Error fetching dropdown data:', error);
-            showNotification('Failed to fetch necessary data', 'error');
+            return response.json() as Promise<Sale[]>
         }
-    }, [showNotification]);
+    })
 
-    const fetchSales = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const response = await fetch(`/api/sales`);
-            const data: Sale[] = await response.json();
-            setSales(data);
-        } catch (error) {
-            console.error('Error fetching sales:', error);
-            showNotification('Failed to fetch sales', 'error');
-        } finally {
-            setIsLoading(false);
+    const { data: products = [] } = useQuery({
+        queryKey: PRODUCTS_QUERY_KEY,
+        queryFn: async () => {
+            const response = await fetch('/api/products')
+            if (!response.ok) {
+                throw new Error('Failed to fetch products')
+            }
+            return response.json() as Promise<Product[]>
         }
-    }, [showNotification]);
+    })
 
-    useEffect(() => {
-        fetchSales();
-        fetchDropdownData();
-    }, [fetchSales, fetchDropdownData]);
+    const { data: salespersons = [] } = useQuery({
+        queryKey: SALESPERSONS_QUERY_KEY,
+        queryFn: async () => {
+            const response = await fetch('/api/salespersons')
+            if (!response.ok) {
+                throw new Error('Failed to fetch salespersons')
+            }
+            return response.json() as Promise<Salesperson[]>
+        }
+    })
 
-    const handleAddSale = async (formData: SaleFormData) => {
-        try {
+    const { data: customers = [] } = useQuery({
+        queryKey: CUSTOMERS_QUERY_KEY,
+        queryFn: async () => {
+            const response = await fetch('/api/customers')
+            if (!response.ok) {
+                throw new Error('Failed to fetch customers')
+            }
+            return response.json() as Promise<Customer[]>
+        }
+    })
+
+    const { mutate: createSale } = useMutation({
+        mutationFn: async (formData: SaleFormData) => {
             const response = await fetch('/api/sales', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(formData)
-            });
-            const data: ApiResponse<Sale> = await response.json();
-            if (data.success) {
-                setSales([...sales, data.data]);
-                setIsAddModalOpen(false);
-                showNotification('Sale created successfully', 'success');
-            } else {
-                showNotification(data.message || 'Failed to create sale', 'error');
+            })
+            if (!response.ok) {
+                throw new Error('Failed to create sale')
             }
-        } catch (error) {
-            console.error('Error creating sale:', error);
-            showNotification('Failed to create sale', 'error');
+            return response.json()
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: SALES_QUERY_KEY })
+            setIsAddModalOpen(false)
+            showNotification('Sale created successfully', 'success')
+        },
+        onError: (error) => {
+            showNotification(error instanceof Error ? error.message : 'Failed to create sale', 'error')
         }
-    };
+    })
 
     const handleApplyFilter = () => {
-        setAppliedDateFilter(dateFilter);
-    };
+        setAppliedDateFilter(dateFilter)
+    }
 
     const handleClearFilter = () => {
-        setDateFilter({ startDate: '', endDate: '' });
-        setAppliedDateFilter({ startDate: '', endDate: '' });
-    };
+        setDateFilter({ startDate: '', endDate: '' })
+        setAppliedDateFilter({ startDate: '', endDate: '' })
+    }
 
     const calculateCommission = (sale: Sale): number => {
-        return sale.product.salePrice * (sale.product.commissionPercentage / 100);
-    };
+        return sale.product.salePrice * (sale.product.commissionPercentage / 100)
+    }
 
     const salesTableTD = (value: string) => {
         return <td style={formStyles.td}>{value}</td>
@@ -126,7 +124,7 @@ const Sales: React.FC = () => {
         'Price',
         'Salesperson',
         'Commission'
-    ];
+    ]
 
     return (
         <div>
@@ -150,7 +148,7 @@ const Sales: React.FC = () => {
                 products={products}
                 salespersons={salespersons}
                 customers={customers}
-                handleSave={handleAddSale}
+                handleSave={createSale}
                 isEditMode={false}
             />
 
@@ -183,6 +181,7 @@ const Sales: React.FC = () => {
                         onChange={e => setDateFilter({ ...dateFilter, endDate: e.target.value })}
                     />
                 </div>
+
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
                     <button
                         onClick={handleApplyFilter}
@@ -202,7 +201,7 @@ const Sales: React.FC = () => {
                 </div>
             </div>
 
-            {isLoading ? (
+            {isSalesLoading ? (
                 <div style={{ textAlign: 'center', padding: '20px' }}>Loading sales...</div>
             ) : !sales.length ? (
                 <div style={{ textAlign: 'center', padding: '20px' }}>No sales found.</div>
@@ -235,7 +234,7 @@ const Sales: React.FC = () => {
                 </table>
             )}
         </div>
-    );
-};
+    )
+}
 
-export default Sales;
+export default Sales

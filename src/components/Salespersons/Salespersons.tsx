@@ -1,144 +1,123 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Salesperson, ApiResponse } from '../../types';
-import { formStyles } from '../shared/styles';
-import { SalespersonsModal } from './SalespersonsModal';
+import React, { useState, useCallback } from 'react'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { Salesperson } from '../../types'
+import { formStyles } from '../shared/styles'
+import { SalespersonsModal } from './SalespersonsModal'
+
+type ErrorMessage = {
+    message: string
+    type: 'error' | 'success'
+}
+
+const SALESPERSONS_QUERY_KEY = ['salespersons']
 
 const Salespersons: React.FC = () => {
-    const [salespersons, setSalespersons] = useState<Salesperson[]>([]);
-    const [editingSalesperson, setEditingSalesperson] = useState<Salesperson | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [notification, setNotification] = useState<{ message: string; type: 'error' | 'success' } | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const queryClient = useQueryClient()
+    const [editingSalesperson, setEditingSalesperson] = useState<Salesperson | null>(null)
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [notification, setNotification] = useState<ErrorMessage | null>(null)
 
     const showNotification = useCallback((message: string, type: 'error' | 'success') => {
-        setNotification({ message, type });
-        setTimeout(() => setNotification(null), 5000);
-    }, []);
+        setNotification({ message, type })
+        setTimeout(() => setNotification(null), 5000)
+    }, [])
 
-    const fetchSalespersons = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const response = await fetch('/api/salespersons');
+    const { data: salespersons = [], isLoading } = useQuery({
+        queryKey: SALESPERSONS_QUERY_KEY,
+        queryFn: async () => {
+            const response = await fetch('/api/salespersons')
             if (!response.ok) {
-                throw new Error('Failed to fetch salespersons');
+                throw new Error('Failed to fetch salespersons')
             }
-            const data: Salesperson[] = await response.json();
-            setSalespersons(data);
-        } catch (error) {
-            showNotification('Failed to load salespersons. Please try again.', 'error');
-        } finally {
-            setIsLoading(false);
+            return response.json() as Promise<Salesperson[]>
         }
-    }, [showNotification]);
-
-    useEffect(() => {
-        fetchSalespersons();
-    }, [fetchSalespersons]);
-
-    const openSalespersonModal = (salesperson?: Salesperson) => {
-        setEditingSalesperson(salesperson || null);
-        setIsModalOpen(true);
-    };
+    })
 
     const isDuplicateSalesperson = (salesperson: Omit<Salesperson, 'id'> & { id?: number }) => {
         return salespersons.some(sp =>
-            sp.id !== salesperson.id && // Skip current salesperson when editing
+            sp.id !== salesperson.id &&
             sp.firstName.toLowerCase() === salesperson.firstName.toLowerCase() &&
             sp.lastName.toLowerCase() === salesperson.lastName.toLowerCase() &&
             sp.phone === salesperson.phone
-        );
-    };
+        )
+    }
 
-    const handleSaveSalesperson = async (salesperson: Omit<Salesperson, 'id'> & { id?: number }) => {
-        try {
-            // Check for duplicates
+    const { mutate: saveSalesperson } = useMutation({
+        mutationFn: async (salesperson: Omit<Salesperson, 'id'> & { id?: number }) => {
             if (isDuplicateSalesperson(salesperson)) {
-                showNotification('A salesperson with this name and phone number already exists.', 'error');
-                return;
+                throw new Error('A salesperson with this name and phone number already exists.')
             }
 
-            if (salesperson.id) {
-                // Update existing salesperson
-                const response = await fetch(`/api/salespersons/${salesperson.id}`, {
-                    method: 'PUT',
+            const isUpdate = typeof salesperson.id === 'number'
+            const response = await fetch(
+                isUpdate ? `/api/salespersons/${salesperson.id}` : '/api/salespersons',
+                {
+                    method: isUpdate ? 'PUT' : 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(salesperson),
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to update salesperson');
                 }
-
-                const data: ApiResponse<Salesperson> = await response.json();
-                if (data.success) {
-                    setSalespersons(prevSalespersons =>
-                        prevSalespersons.map(sp => (sp.id === salesperson.id ? data.data : sp))
-                    );
-                    showNotification('Salesperson updated successfully', 'success');
-                } else {
-                    throw new Error(data.message || 'Failed to update salesperson');
-                }
-            } else {
-                // Add new salesperson
-                const response = await fetch('/api/salespersons', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(salesperson),
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to create salesperson');
-                }
-
-                const data: ApiResponse<Salesperson> = await response.json();
-                if (data.success) {
-                    setSalespersons(prevSalespersons => [...prevSalespersons, data.data]);
-                    showNotification('Salesperson added successfully', 'success');
-                } else {
-                    throw new Error(data.message || 'Failed to create salesperson');
-                }
-            }
-            setIsModalOpen(false);
-        } catch (error) {
-            showNotification(
-                error instanceof Error ? error.message : 'Failed to save salesperson. Please try again.',
-                'error'
-            );
-        }
-    };
-
-    const handleDeleteSalesperson = async (salespersonId: number) => {
-        if (!window.confirm('Are you sure you want to delete this salesperson?')) {
-            return;
-        }
-
-        try {
-            const response = await fetch(`/api/salespersons/${salespersonId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+            )
 
             if (!response.ok) {
-                throw new Error('Failed to delete salesperson');
+                throw new Error(`Failed to ${isUpdate ? 'update' : 'create'} salesperson`)
             }
 
-            setSalespersons(prevSalespersons =>
-                prevSalespersons.filter(sp => sp.id !== salespersonId)
-            );
-            showNotification('Salesperson deleted successfully', 'success');
-        } catch (error) {
-            showNotification(
-                error instanceof Error ? error.message : 'Failed to delete salesperson. Please try again.',
-                'error'
-            );
+            if (response.ok && response.status === 204) {
+                return salesperson as Salesperson
+            }
+
+            return response.ok ? (await response.json() as Salesperson) : salesperson as Salesperson
+        },
+        onSuccess: (_, variables) => {
+            const isUpdate = typeof variables.id === 'number'
+            queryClient.invalidateQueries({ queryKey: SALESPERSONS_QUERY_KEY })
+            showNotification(`Salesperson ${isUpdate ? 'updated' : 'added'} successfully`, 'success')
+            setIsModalOpen(false)
+        },
+        onError: (error) => {
+            showNotification(error instanceof Error ? error.message : 'Failed to save salesperson', 'error')
         }
-    };
+    })
+
+    const { mutate: deleteSalesperson } = useMutation({
+        mutationFn: async (salespersonId: number) => {
+            const response = await fetch(`/api/salespersons/${salespersonId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+            })
+
+            if (!response.ok) {
+                throw new Error('Failed to delete salesperson')
+            }
+
+            return salespersonId
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: SALESPERSONS_QUERY_KEY })
+            showNotification('Salesperson deleted successfully', 'success')
+        },
+        onError: (error) => {
+            showNotification(error instanceof Error ? error.message : 'Failed to delete salesperson', 'error')
+        }
+    })
+
+    const openSalespersonModal = useCallback((salesperson?: Salesperson) => {
+        setEditingSalesperson(salesperson || null)
+        setIsModalOpen(true)
+    }, [])
+
+    const handleSaveSalesperson = useCallback(async (salesperson: Omit<Salesperson, 'id'> & { id?: number }) => {
+        saveSalesperson(salesperson)
+    }, [saveSalesperson])
+
+    const handleDeleteSalesperson = useCallback(async (salespersonId: number) => {
+        if (!window.confirm('Are you sure you want to delete this salesperson?')) {
+            return
+        }
+        deleteSalesperson(salespersonId)
+    }, [deleteSalesperson])
 
     return (
         <div>
@@ -230,7 +209,7 @@ const Salespersons: React.FC = () => {
                 </table>
             )}
         </div>
-    );
-};
+    )
+}
 
-export default Salespersons;
+export default Salespersons

@@ -1,8 +1,7 @@
-import React from 'react';
-import ReactModal from 'react-modal';
+import React from 'react'
+import ReactModal from 'react-modal'
 
-// Bind modal to your appElement for accessibility
-ReactModal.setAppElement('#root');
+ReactModal.setAppElement('#root')
 
 const customStyles = {
   content: {
@@ -20,16 +19,16 @@ const customStyles = {
   overlay: {
     backgroundColor: 'rgba(0, 0, 0, 0.75)'
   }
-};
+}
 
 interface ModalProps {
-  isOpen: boolean;
-  onRequestClose: () => void;
-  title: string;
-  message?: string;
-  confirmLabel?: string;
-  children?: React.ReactNode;
-  showConfirmButton?: boolean;
+  isOpen: boolean
+  onRequestClose: () => void
+  title: string
+  message?: string
+  confirmLabel?: string
+  children?: React.ReactNode
+  showConfirmButton?: boolean
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -68,7 +67,7 @@ const Modal: React.FC<ModalProps> = ({
         {children}
         {showConfirmButton && (
           <div style={{ textAlign: 'right', marginTop: '20px' }}>
-            <button 
+            <button
               onClick={onRequestClose}
               style={{
                 padding: '8px 16px',
@@ -85,7 +84,7 @@ const Modal: React.FC<ModalProps> = ({
         )}
       </div>
     </ReactModal>
-  );
-};
+  )
+}
 
-export default Modal;
+export default Modal

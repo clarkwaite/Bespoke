@@ -1,28 +1,28 @@
-import { useState, useEffect } from 'react';
-import { Product } from "../../types";
-import { formStyles } from "../shared/styles";
+import { useState, useEffect } from 'react'
+import { Product } from "../../types"
+import { formStyles } from "../shared/styles"
 import Modal from "../shared/Modal"
 
 type ValidationErrors = {
-    name?: string;
-    manufacturer?: string;
-    style?: string;
-    purchasePrice?: string;
-    salePrice?: string;
-    qtyOnHand?: string;
-    commissionPercentage?: string;
-    duplicateProduct?: string;
-};
+    name?: string
+    manufacturer?: string
+    style?: string
+    purchasePrice?: string
+    salePrice?: string
+    qtyOnHand?: string
+    commissionPercentage?: string
+    duplicateProduct?: string
+}
 
-type ProductFormData = Omit<Product, 'id'> & { id?: number };
+type ProductFormData = Omit<Product, 'id'> & { id?: number }
 
 type ProductsModalProps = {
-    isModalOpen: boolean;
-    setIsModalOpen: (isOpen: boolean) => void;
-    product?: Product | null;
-    handleSave: (product: ProductFormData) => void;
-    isEditMode: boolean;
-    existingProducts: Product[];
+    isModalOpen: boolean
+    setIsModalOpen: (isOpen: boolean) => void
+    product?: Product | null
+    handleSave: (product: ProductFormData) => void
+    isEditMode: boolean
+    existingProducts: Product[]
 }
 
 export const ProductsModal = ({
@@ -41,13 +41,13 @@ export const ProductsModal = ({
         salePrice: 0,
         qtyOnHand: 0,
         commissionPercentage: 0
-    });
-    const [errors, setErrors] = useState<ValidationErrors>({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    })
+    const [errors, setErrors] = useState<ValidationErrors>({})
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     useEffect(() => {
         if (product) {
-            setFormData(product);
+            setFormData(product)
         } else {
             setFormData({
                 name: '',
@@ -57,86 +57,78 @@ export const ProductsModal = ({
                 salePrice: 0,
                 qtyOnHand: 0,
                 commissionPercentage: 0
-            });
+            })
         }
-        setErrors({});
-    }, [product, isModalOpen]);
+        setErrors({})
+    }, [product, isModalOpen])
 
     const checkForDuplicates = (data: ProductFormData) => {
         const duplicate = existingProducts.find(p =>
-            p.id !== (isEditMode ? product?.id : undefined) && // Skip current product when editing
+            p.id !== (isEditMode ? product?.id : undefined) &&
             p.name.toLowerCase() === data.name.toLowerCase() &&
             p.manufacturer.toLowerCase() === data.manufacturer.toLowerCase()
-        );
+        )
 
-        return duplicate ? 'A product with this name and manufacturer already exists' : null;
-    };
+        return duplicate ? 'A product with this name and manufacturer already exists' : null
+    }
 
     const validateForm = (): boolean => {
-        const newErrors: ValidationErrors = {};
+        const newErrors: ValidationErrors = {}
 
-        // Name validation
         if (!formData.name.trim()) {
-            newErrors.name = 'Name is required';
+            newErrors.name = 'Name is required'
         }
 
-        // Manufacturer validation
         if (!formData.manufacturer.trim()) {
-            newErrors.manufacturer = 'Manufacturer is required';
+            newErrors.manufacturer = 'Manufacturer is required'
         }
 
-        // Style validation
         if (!formData.style.trim()) {
-            newErrors.style = 'Style is required';
+            newErrors.style = 'Style is required'
         }
 
-        // Purchase Price validation
         if (formData.purchasePrice <= 0) {
-            newErrors.purchasePrice = 'Purchase price must be greater than 0';
+            newErrors.purchasePrice = 'Purchase price must be greater than 0'
         }
 
-        // Sale Price validation
         if (formData.salePrice <= 0) {
-            newErrors.salePrice = 'Sale price must be greater than 0';
+            newErrors.salePrice = 'Sale price must be greater than 0'
         } else if (formData.salePrice <= formData.purchasePrice) {
-            newErrors.salePrice = 'Sale price must be greater than purchase price';
+            newErrors.salePrice = 'Sale price must be greater than purchase price'
         }
 
-        // Quantity validation
         if (formData.qtyOnHand < 0) {
-            newErrors.qtyOnHand = 'Quantity cannot be negative';
+            newErrors.qtyOnHand = 'Quantity cannot be negative'
         }
 
-        // Commission Percentage validation
         if (formData.commissionPercentage < 0) {
-            newErrors.commissionPercentage = 'Commission percentage cannot be negative';
+            newErrors.commissionPercentage = 'Commission percentage cannot be negative'
         } else if (formData.commissionPercentage > 100) {
-            newErrors.commissionPercentage = 'Commission percentage cannot exceed 100%';
+            newErrors.commissionPercentage = 'Commission percentage cannot exceed 100%'
         }
 
-        // Check for duplicates
         if (formData.name && formData.manufacturer) {
-            const duplicateError = checkForDuplicates(formData);
+            const duplicateError = checkForDuplicates(formData)
             if (duplicateError) {
-                newErrors.duplicateProduct = duplicateError;
+                newErrors.duplicateProduct = duplicateError
             }
         }
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
+    }
 
     const handleSubmit = () => {
         if (validateForm()) {
-            setIsSubmitting(true);
+            setIsSubmitting(true)
             handleSave({
                 ...formData,
                 id: isEditMode ? product?.id : undefined
-            });
-            setIsSubmitting(false);
-            setIsModalOpen(false);
+            })
+            setIsSubmitting(false)
+            setIsModalOpen(false)
         }
-    };
+    }
 
     return (
         <Modal
@@ -156,11 +148,11 @@ export const ProductsModal = ({
                         type="text"
                         value={formData.name}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, name: e.target.value }));
+                            setFormData(prev => ({ ...prev, name: e.target.value }))
                             if (errors.name) {
-                                setErrors(prev => ({ ...prev, name: undefined, duplicateProduct: undefined }));
+                                setErrors(prev => ({ ...prev, name: undefined, duplicateProduct: undefined }))
                             } else if (errors.duplicateProduct) {
-                                setErrors(prev => ({ ...prev, duplicateProduct: undefined }));
+                                setErrors(prev => ({ ...prev, duplicateProduct: undefined }))
                             }
                         }}
                     />
@@ -178,11 +170,11 @@ export const ProductsModal = ({
                         type="text"
                         value={formData.manufacturer}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, manufacturer: e.target.value }));
+                            setFormData(prev => ({ ...prev, manufacturer: e.target.value }))
                             if (errors.manufacturer) {
-                                setErrors(prev => ({ ...prev, manufacturer: undefined, duplicateProduct: undefined }));
+                                setErrors(prev => ({ ...prev, manufacturer: undefined, duplicateProduct: undefined }))
                             } else if (errors.duplicateProduct) {
-                                setErrors(prev => ({ ...prev, duplicateProduct: undefined }));
+                                setErrors(prev => ({ ...prev, duplicateProduct: undefined }))
                             }
                         }}
                     />
@@ -199,9 +191,9 @@ export const ProductsModal = ({
                         type="text"
                         value={formData.style}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, style: e.target.value }));
+                            setFormData(prev => ({ ...prev, style: e.target.value }))
                             if (errors.style) {
-                                setErrors(prev => ({ ...prev, style: undefined }));
+                                setErrors(prev => ({ ...prev, style: undefined }))
                             }
                         }}
                     />
@@ -220,9 +212,9 @@ export const ProductsModal = ({
                         step="0.01"
                         value={formData.purchasePrice}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, purchasePrice: parseFloat(e.target.value) }));
+                            setFormData(prev => ({ ...prev, purchasePrice: parseFloat(e.target.value) }))
                             if (errors.purchasePrice) {
-                                setErrors(prev => ({ ...prev, purchasePrice: undefined }));
+                                setErrors(prev => ({ ...prev, purchasePrice: undefined }))
                             }
                         }}
                     />
@@ -241,9 +233,9 @@ export const ProductsModal = ({
                         step="0.01"
                         value={formData.salePrice}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, salePrice: parseFloat(e.target.value) }));
+                            setFormData(prev => ({ ...prev, salePrice: parseFloat(e.target.value) }))
                             if (errors.salePrice) {
-                                setErrors(prev => ({ ...prev, salePrice: undefined }));
+                                setErrors(prev => ({ ...prev, salePrice: undefined }))
                             }
                         }}
                     />
@@ -261,9 +253,9 @@ export const ProductsModal = ({
                         min="0"
                         value={formData.qtyOnHand}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, qtyOnHand: parseInt(e.target.value) }));
+                            setFormData(prev => ({ ...prev, qtyOnHand: parseInt(e.target.value) }))
                             if (errors.qtyOnHand) {
-                                setErrors(prev => ({ ...prev, qtyOnHand: undefined }));
+                                setErrors(prev => ({ ...prev, qtyOnHand: undefined }))
                             }
                         }}
                     />
@@ -283,9 +275,9 @@ export const ProductsModal = ({
                         step="0.1"
                         value={formData.commissionPercentage}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, commissionPercentage: parseFloat(e.target.value) }));
+                            setFormData(prev => ({ ...prev, commissionPercentage: parseFloat(e.target.value) }))
                             if (errors.commissionPercentage) {
-                                setErrors(prev => ({ ...prev, commissionPercentage: undefined }));
+                                setErrors(prev => ({ ...prev, commissionPercentage: undefined }))
                             }
                         }}
                     />
@@ -310,5 +302,5 @@ export const ProductsModal = ({
                 </div>
             </div>
         </Modal>
-    );
-};
+    )
+}

@@ -1,132 +1,104 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Product, ApiResponse } from '../../types';
-import { formStyles } from '../shared/styles';
-import { ProductsModal } from './ProductsModal';
+import React, { useState, useCallback } from 'react'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { Product } from '../../types'
+import { formStyles } from '../shared/styles'
+import { ProductsModal } from './ProductsModal'
 
 type ErrorMessage = {
-    message: string;
-    type: 'error' | 'success';
-};
+    message: string
+    type: 'error' | 'success'
+}
+
+const PRODUCTS_QUERY_KEY = ['products'] as const
+
+type ProductResponse = Product[]
 
 const Products: React.FC = () => {
-    const [products, setProducts] = useState<Product[]>([]);
-    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [notification, setNotification] = useState<ErrorMessage | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const queryClient = useQueryClient()
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [notification, setNotification] = useState<ErrorMessage | null>(null)
 
     const showNotification = useCallback((message: string, type: 'error' | 'success') => {
-        setNotification({ message, type });
-        setTimeout(() => setNotification(null), 5000);
-    }, []);
+        setNotification({ message, type })
+        setTimeout(() => setNotification(null), 5000)
+    }, [])
 
-    const fetchProducts = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const response = await fetch('/api/products');
+    const { data: products = [], isLoading } = useQuery({
+        queryKey: PRODUCTS_QUERY_KEY,
+        queryFn: async () => {
+            const response = await fetch('/api/products')
             if (!response.ok) {
-                throw new Error('Failed to fetch products');
+                throw new Error('Failed to fetch products')
             }
-            const productsData: Product[] = await response.json();
-            setProducts(productsData);
-        } catch (error) {
-            showNotification('Failed to load products. Please try again.', 'error');
-        } finally {
-            setIsLoading(false);
+            const data = await response.json()
+            return data as ProductResponse
         }
-    }, [showNotification]);
+    })
 
-    useEffect(() => {
-        fetchProducts();
-    }, [fetchProducts]);
+    const { mutate: saveProduct } = useMutation({
+        mutationFn: async (product: Omit<Product, 'id'> & { id?: number }) => {
+            const isUpdate = typeof product.id === 'number'
+            const response = await fetch(
+                isUpdate ? `/api/products/${product.id}` : '/api/products',
+                {
+                    method: isUpdate ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(product),
+                }
+            )
+
+            if (response.ok && response.status === 204) {
+                return product as Product
+            }
+
+            return response.ok ? (await response.json() as Product) : product as Product
+        },
+        onSuccess: (_, variables) => {
+            const isUpdate = typeof variables.id === 'number'
+            queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY })
+            showNotification(`Product ${isUpdate ? 'updated' : 'added'} successfully`, 'success')
+            setIsModalOpen(false)
+        },
+        onError: () => {
+            showNotification('Failed to save product', 'error')
+        }
+    })
+
+    const { mutate: deleteProduct } = useMutation({
+        mutationFn: async (productId: number) => {
+            const response = await fetch(`/api/products/${productId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+            })
+
+            if (!response.ok) {
+                throw new Error('Failed to delete product')
+            }
+
+            return productId
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY })
+            showNotification('Product deleted successfully', 'success')
+        }
+    })
 
     const openProductModal = useCallback((product?: Product) => {
-        setEditingProduct(product || null);
-        setIsModalOpen(true);
-    }, []);
+        setEditingProduct(product || null)
+        setIsModalOpen(true)
+    }, [])
 
     const handleSaveProduct = useCallback(async (product: Omit<Product, 'id'> & { id?: number }) => {
-        try {
-            if (product.id) {
-                // Update existing product
-                const response = await fetch(`/api/products/${product.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(product),
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to update product');
-                }
-
-                const data: ApiResponse<Product> = await response.json();
-                if (data.success) {
-                    setProducts(prevProducts =>
-                        prevProducts.map(p => (p.id === product.id ? data.data : p))
-                    );
-                    showNotification('Product updated successfully', 'success');
-                } else {
-                    throw new Error(data.message || 'Failed to update product');
-                }
-            } else {
-                // Add new product
-                const response = await fetch('/api/products', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(product),
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to create product');
-                }
-
-                const data: ApiResponse<Product> = await response.json();
-                if (data.success) {
-                    setProducts(prevProducts => [...prevProducts, data.data]);
-                    showNotification('Product added successfully', 'success');
-                } else {
-                    throw new Error(data.message || 'Failed to create product');
-                }
-            }
-            setIsModalOpen(false);
-        } catch (error) {
-            showNotification(
-                error instanceof Error ? error.message : 'Failed to save product. Please try again.',
-                'error'
-            );
-        }
-    }, [showNotification]);
+        saveProduct(product)
+    }, [saveProduct])
 
     const handleDeleteProduct = useCallback(async (productId: number) => {
         if (!window.confirm('Are you sure you want to delete this product?')) {
-            return;
+            return
         }
-
-        try {
-            const response = await fetch(`/api/products/${productId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to delete product');
-            }
-
-            setProducts(prevProducts => prevProducts.filter(p => p.id !== productId));
-            showNotification('Product deleted successfully', 'success');
-        } catch (error) {
-            showNotification(
-                error instanceof Error ? error.message : 'Failed to delete product. Please try again.',
-                'error'
-            );
-        }
-    }, [showNotification]);
+        deleteProduct(productId)
+    }, [deleteProduct])
 
     return (
         <div>
@@ -221,7 +193,7 @@ const Products: React.FC = () => {
                 </table>
             )}
         </div>
-    );
-};
+    )
+}
 
-export default Products;
+export default Products
