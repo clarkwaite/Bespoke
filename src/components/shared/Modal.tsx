@@ -1,5 +1,12 @@
 import React from 'react'
 import ReactModal from 'react-modal'
+import {
+  ModalHeader,
+  ModalTitle,
+  CloseButton,
+  ModalActions,
+} from './modalStyles'
+import { Button } from './styles'
 
 ReactModal.setAppElement('#root')
 
@@ -52,59 +59,31 @@ const Modal: React.FC<ModalProps> = ({
       contentLabel={title}
     >
       <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0 }}>{title}</h2>
+        <ModalHeader>
+          <ModalTitle>{title}</ModalTitle>
           {!showConfirmButton && (
-            <button
-              onClick={onRequestClose}
-              style={{
-                background: 'none',
-                border: 'none',
-                fontSize: '20px',
-                cursor: 'pointer',
-                padding: '5px'
-              }}
-            >
-              ×
-            </button>
+            <CloseButton onClick={onRequestClose}>×</CloseButton>
           )}
-        </div>
+        </ModalHeader>
         {message && <p>{message}</p>}
         {children}
         {showConfirmButton && (
-          <div style={{ textAlign: 'right', marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-            <button
-              onClick={onRequestClose}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: '#dc3545',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
+          <ModalActions>
+            <Button variant='danger' onClick={onRequestClose}>
               {cancelLabel}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant='primary'
               onClick={() => {
                 if (onConfirm) {
                   onConfirm()
                 }
                 onRequestClose()
               }}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: '#007bff',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
             >
               {confirmLabel}
-            </button>
-          </div>
+            </Button>
+          </ModalActions>
         )}
       </div>
     </ReactModal>

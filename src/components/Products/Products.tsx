@@ -1,14 +1,23 @@
 import React, { useState, useCallback } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { Product } from '../../types'
-import { formStyles } from '../shared/styles'
+import {
+    ContentContainer,
+    PageHeader,
+    TableContainer,
+    Table,
+    TableHeader,
+    TableCell,
+    TableActions,
+    ActionButton,
+    Button,
+} from '../shared/styles'
 import { ProductsModal } from './ProductsModal'
 import DeleteConfirmationModal from '../shared/DeleteConfirmationModal'
 import { NotificationDisplay, useNotification } from '../../hooks/useNotification'
 import { PRODUCTS_QUERY_KEY } from '../shared/constants'
 import { LoadingState } from '../shared/LoadingState'
 import { EmptyState } from '../shared/EmptyState'
-
 
 type ProductResponse = Product[]
 
@@ -94,99 +103,88 @@ const Products: React.FC = () => {
         setDeleteModalOpen(true)
     }, [])
 
-    const handleConfirmDelete = useCallback(() => {
-        if (productToDelete) {
-            deleteProduct(productToDelete.id)
-        }
-    }, [deleteProduct, productToDelete])
-
     return (
-        <div>
-            {notification && (
-                <NotificationDisplay notification={notification} />
-            )}
+        <ContentContainer>
+            <NotificationDisplay notification={notification} />
 
             <ProductsModal
                 isModalOpen={isModalOpen}
                 setIsModalOpen={setIsModalOpen}
                 product={editingProduct}
                 handleSave={handleSaveProduct}
-                isEditMode={Boolean(editingProduct)}
+                isEditMode={!!editingProduct}
                 existingProducts={products}
             />
 
             <DeleteConfirmationModal
                 isOpen={deleteModalOpen}
                 onClose={() => setDeleteModalOpen(false)}
-                onConfirm={handleConfirmDelete}
-                itemName={productToDelete?.name || 'this product'}
+                onConfirm={() => {
+                    if (productToDelete) {
+                        deleteProduct(productToDelete.id)
+                        setDeleteModalOpen(false)
+                        setProductToDelete(null)
+                    }
+                }}
+                title="Delete Product"
+                itemName="product"
             />
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <PageHeader>
                 <h2>Products</h2>
-                <button
-                    onClick={() => openProductModal()}
-                    style={{ ...formStyles.button, ...formStyles.saveButton }}
-                >
+                <Button variant='primary' onClick={() => openProductModal()}>
                     Add New Product
-                </button>
-            </div>
+                </Button>
+            </PageHeader>
 
-            {isLoading ? <LoadingState message='products' /> : !products.length ? <EmptyState message='products' /> :
-                (
-                    <table style={formStyles.table}>
+            {isLoading ? <LoadingState message='products' /> : !products.length ? <EmptyState message='products' /> : (
+                <TableContainer>
+                    <Table>
                         <thead>
                             <tr>
-                                <th style={formStyles.th}>Name</th>
-                                <th style={formStyles.th}>Manufacturer</th>
-                                <th style={formStyles.th}>Style</th>
-                                <th style={{ ...formStyles.th, textAlign: 'right' }}>Purchase Price</th>
-                                <th style={{ ...formStyles.th, textAlign: 'right' }}>Sale Price</th>
-                                <th style={{ ...formStyles.th, textAlign: 'right' }}>Quantity</th>
-                                <th style={{ ...formStyles.th, textAlign: 'right' }}>Commission %</th>
-                                <th style={{ ...formStyles.th, textAlign: 'center' }}>Actions</th>
+                                <TableHeader>Name</TableHeader>
+                                <TableHeader>Manufacturer</TableHeader>
+                                <TableHeader>Style</TableHeader>
+                                <TableHeader>Purchase Price</TableHeader>
+                                <TableHeader>Sale Price</TableHeader>
+                                <TableHeader>Quantity</TableHeader>
+                                <TableHeader>Commission %</TableHeader>
+                                <TableHeader>Actions</TableHeader>
                             </tr>
                         </thead>
                         <tbody>
                             {products.map(product => (
                                 <tr key={product.id}>
-                                    <td style={formStyles.td}>{product.name}</td>
-                                    <td style={formStyles.td}>{product.manufacturer}</td>
-                                    <td style={formStyles.td}>{product.style}</td>
-                                    <td style={{ ...formStyles.td, textAlign: 'right' }}>
-                                        ${product.purchasePrice.toFixed(2)}
-                                    </td>
-                                    <td style={{ ...formStyles.td, textAlign: 'right' }}>
-                                        ${product.salePrice.toFixed(2)}
-                                    </td>
-                                    <td style={{ ...formStyles.td, textAlign: 'right' }}>
-                                        {product.qtyOnHand}
-                                    </td>
-                                    <td style={{ ...formStyles.td, textAlign: 'right' }}>
-                                        {product.commissionPercentage}%
-                                    </td>
-                                    <td style={{ ...formStyles.td, textAlign: 'center' }}>
-                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                                            <button
+                                    <TableCell>{product.name}</TableCell>
+                                    <TableCell>{product.manufacturer}</TableCell>
+                                    <TableCell>{product.style}</TableCell>
+                                    <TableCell>${product.purchasePrice.toFixed(2)}</TableCell>
+                                    <TableCell>${product.salePrice.toFixed(2)}</TableCell>
+                                    <TableCell>{product.qtyOnHand}</TableCell>
+                                    <TableCell>{product.commissionPercentage}%</TableCell>
+                                    <TableCell>
+                                        <TableActions>
+                                            <ActionButton
+                                                action="edit"
                                                 onClick={() => openProductModal(product)}
-                                                style={{ ...formStyles.button, ...formStyles.saveButton }}
                                             >
                                                 Edit
-                                            </button>
-                                            <button
+                                            </ActionButton>
+                                            <ActionButton
+                                                action="delete"
                                                 onClick={() => handleDeleteClick(product)}
-                                                style={formStyles.deleteButton}
                                             >
                                                 Delete
-                                            </button>
-                                        </div>
-                                    </td>
+                                            </ActionButton>
+                                        </TableActions>
+                                    </TableCell>
                                 </tr>
                             ))}
                         </tbody>
-                    </table>
-                )}
-        </div>
+                    </Table>
+                </TableContainer>
+            )}
+        </ContentContainer>
     )
 }
 

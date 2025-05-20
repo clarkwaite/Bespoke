@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Customer } from "../../types"
-import { formStyles } from "../shared/styles"
 import Modal from "../shared/Modal"
+import {
+    FormField,
+    FormLabel,
+    Input,
+    ErrorMessage,
+    ButtonContainer,
+    Button
+} from '../shared/styles'
 
 type ValidationErrors = {
     firstName?: string
@@ -94,13 +101,10 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
             showConfirmButton={false}
         >
             <div>
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>First Name *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.firstName ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>First Name *</FormLabel>
+                    <Input
+                        hasError={!!errors.firstName}
                         type="text"
                         value={formData.firstName}
                         onChange={e => {
@@ -110,15 +114,13 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
                             }
                         }}
                     />
-                    {errors.firstName && <div style={formStyles.error}>{errors.firstName}</div>}
-                </div>
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Last Name *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.lastName ? formStyles.errorBorder : {})
-                        }}
+                    {errors.firstName && <ErrorMessage>{errors.firstName}</ErrorMessage>}
+                </FormField>
+
+                <FormField>
+                    <FormLabel>Last Name *</FormLabel>
+                    <Input
+                        hasError={!!errors.lastName}
                         type="text"
                         value={formData.lastName}
                         onChange={e => {
@@ -128,15 +130,29 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
                             }
                         }}
                     />
-                    {errors.lastName && <div style={formStyles.error}>{errors.lastName}</div>}
-                </div>
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Address *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.address ? formStyles.errorBorder : {})
+                    {errors.lastName && <ErrorMessage>{errors.lastName}</ErrorMessage>}
+                </FormField>
+
+                <FormField>
+                    <FormLabel>Phone *</FormLabel>
+                    <Input
+                        hasError={!!errors.phone}
+                        type="tel"
+                        value={formData.phone}
+                        onChange={e => {
+                            setFormData(prev => ({ ...prev, phone: e.target.value }))
+                            if (errors.phone) {
+                                setErrors(prev => ({ ...prev, phone: undefined }))
+                            }
                         }}
+                    />
+                    {errors.phone && <ErrorMessage>{errors.phone}</ErrorMessage>}
+                </FormField>
+
+                <FormField>
+                    <FormLabel>Address *</FormLabel>
+                    <Input
+                        hasError={!!errors.address}
                         type="text"
                         value={formData.address}
                         onChange={e => {
@@ -146,34 +162,13 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
                             }
                         }}
                     />
-                    {errors.address && <div style={formStyles.error}>{errors.address}</div>}
-                </div>
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Phone *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.phone ? formStyles.errorBorder : {})
-                        }}
-                        type="text"
-                        value={formData.phone}
-                        onChange={e => {
-                            setFormData(prev => ({ ...prev, phone: e.target.value }))
-                            if (errors.phone) {
-                                setErrors(prev => ({ ...prev, phone: undefined }))
-                            }
-                        }}
-                        placeholder="234-567-8900"
-                    />
-                    {errors.phone && <div style={formStyles.error}>{errors.phone}</div>}
-                </div>
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Start Date *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.startDate ? formStyles.errorBorder : {})
-                        }}
+                    {errors.address && <ErrorMessage>{errors.address}</ErrorMessage>}
+                </FormField>
+
+                <FormField>
+                    <FormLabel>Start Date *</FormLabel>
+                    <Input
+                        hasError={!!errors.startDate}
                         type="date"
                         value={formData.startDate}
                         onChange={e => {
@@ -183,24 +178,25 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
                             }
                         }}
                     />
-                    {errors.startDate && <div style={formStyles.error}>{errors.startDate}</div>}
-                </div>
-                <div style={formStyles.buttonContainer}>
-                    <button
-                        style={{ ...formStyles.button, ...formStyles.cancelButton }}
+                    {errors.startDate && <ErrorMessage>{errors.startDate}</ErrorMessage>}
+                </FormField>
+
+                <ButtonContainer>
+                    <Button
                         onClick={() => setIsModalOpen(false)}
                         disabled={isSubmitting}
+                        variant='danger'
                     >
                         Cancel
-                    </button>
-                    <button
-                        style={{ ...formStyles.button, ...formStyles.saveButton }}
+                    </Button>
+                    <Button
                         onClick={handleSubmit}
                         disabled={isSubmitting}
+                        variant='primary'
                     >
-                        {isSubmitting ? 'Saving...' : (isEditMode ? 'Update' : 'Save')}
-                    </button>
-                </div>
+                        {isSubmitting ? 'Saving...' : (isEditMode ? 'Update' : 'Add Customer')}
+                    </Button>
+                </ButtonContainer>
             </div>
         </Modal>
     )

@@ -1,7 +1,20 @@
 import React, { useState } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { Sale } from '../../types'
-import { formStyles } from '../shared/styles'
+import {
+    Container,
+    Header,
+    FilterContainer,
+    Field,
+    Label,
+    DatePicker,
+    ButtonGroup,
+    Table,
+    TableHeader,
+    TableCell,
+    Button,
+    DateApplyButton,
+} from '../shared/styles'
 import { SalesModal } from './SalesModal'
 import { DateRange, SaleFormData } from './types'
 import { isBetweenTwoDates } from '../shared/helpers'
@@ -53,6 +66,7 @@ const Sales: React.FC = () => {
     })
 
     const handleApplyFilter = () => {
+        console.log('Applying filter:', dateFilter)
         setAppliedDateFilter(dateFilter)
     }
 
@@ -66,7 +80,7 @@ const Sales: React.FC = () => {
     }
 
     const salesTableTD = (value: string) => {
-        return <td style={formStyles.td}>{value}</td>
+        return <TableCell>{value}</TableCell>
     }
 
     const salesTableHeaders = [
@@ -78,7 +92,7 @@ const Sales: React.FC = () => {
     ]
 
     return (
-        <div>
+        <Container>
             <NotificationDisplay notification={notification} />
 
             <SalesModal
@@ -88,64 +102,51 @@ const Sales: React.FC = () => {
                 isEditMode={false}
             />
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <Header>
                 <h2>Sales</h2>
-                <button
-                    onClick={() => setIsAddModalOpen(true)}
-                    style={{ ...formStyles.button, ...formStyles.saveButton }}
-                >
+                <Button variant='primary' onClick={() => setIsAddModalOpen(true)}>
                     Create New Sale
-                </button>
-            </div>
+                </Button>
+            </Header>
 
-            <div style={formStyles.filterContainer}>
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Start Date</label>
-                    <input
-                        style={formStyles.datePicker}
+            <FilterContainer>
+                <Field>
+                    <Label>Start Date</Label>
+                    <DatePicker
                         type="date"
                         value={dateFilter.startDate}
                         onChange={e => setDateFilter({ ...dateFilter, startDate: e.target.value })}
                     />
-                </div>
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>End Date</label>
-                    <input
-                        style={formStyles.datePicker}
+                </Field>
+                <Field>
+                    <Label>End Date</Label>
+                    <DatePicker
                         type="date"
                         value={dateFilter.endDate}
                         onChange={e => setDateFilter({ ...dateFilter, endDate: e.target.value })}
                     />
-                </div>
+                </Field>
 
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
-                    <button
-                        onClick={handleApplyFilter}
-                        style={!dateFilter.startDate || !dateFilter.endDate ? formStyles.disabledButton : formStyles.dateApplyButton}
-                        disabled={!dateFilter.startDate || !dateFilter.endDate}
-                    >
+                <ButtonGroup>
+                    <DateApplyButton onClick={handleApplyFilter} variant='primary' disabled={!dateFilter.startDate || !dateFilter.endDate}>
                         Apply Filter
-                    </button>
+                    </DateApplyButton>
                     {(appliedDateFilter.startDate || appliedDateFilter.endDate) && (
-                        <button
-                            onClick={handleClearFilter}
-                            style={formStyles.deleteButton}
-                        >
+                        <Button onClick={handleClearFilter} variant='danger'>
                             Clear Filter
-                        </button>
+                        </Button>
                     )}
-                </div>
-            </div>
+                </ButtonGroup>
+            </FilterContainer>
 
             {isLoading ? <LoadingState message='sales' /> : !sales.length ? <EmptyState message='sales' /> : (
-
-                <table style={formStyles.table}>
+                <Table>
                     <thead>
                         <tr>
                             {salesTableHeaders.map((header, index) => (
-                                <th key={index} style={formStyles.th}>
+                                <TableHeader key={index}>
                                     {header}
-                                </th>
+                                </TableHeader>
                             ))}
                         </tr>
                     </thead>
@@ -164,9 +165,9 @@ const Sales: React.FC = () => {
                                 </tr>
                             ))}
                     </tbody>
-                </table>
+                </Table>
             )}
-        </div>
+        </Container>
     )
 }
 

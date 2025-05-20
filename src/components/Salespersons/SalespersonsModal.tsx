@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Salesperson } from "../../types"
-import { formStyles } from "../shared/styles"
 import Modal from "../shared/Modal"
+import {
+    FormField,
+    FormLabel,
+    Input,
+    ErrorMessage,
+    ButtonContainer,
+    Button,
+} from '../shared/styles'
 
 type ValidationErrors = {
     firstName?: string
@@ -177,57 +184,58 @@ export const SalespersonsModal = ({
             showConfirmButton={false}
         >
             <div>
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>First Name *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.firstName || errors.duplicateName ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>First Name *</FormLabel>
+                    <Input
+                        hasError={!!errors.firstName}
                         type="text"
                         value={formData.firstName}
                         onChange={e => {
                             setFormData(prev => ({ ...prev, firstName: e.target.value }))
                             if (errors.firstName) {
-                                setErrors(prev => ({ ...prev, firstName: undefined, duplicateName: undefined }))
-                            } else if (errors.duplicateName) {
-                                setErrors(prev => ({ ...prev, duplicateName: undefined }))
+                                setErrors(prev => ({ ...prev, firstName: undefined }))
                             }
                         }}
                     />
-                    {errors.firstName && <div style={formStyles.error}>{errors.firstName}</div>}
-                    {errors.duplicateName && <div style={formStyles.error}>{errors.duplicateName}</div>}
-                </div>
+                    {errors.firstName && <ErrorMessage>{errors.firstName}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Last Name *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.lastName || errors.duplicateName ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>Last Name *</FormLabel>
+                    <Input
+                        hasError={!!errors.lastName}
                         type="text"
                         value={formData.lastName}
                         onChange={e => {
                             setFormData(prev => ({ ...prev, lastName: e.target.value }))
                             if (errors.lastName) {
-                                setErrors(prev => ({ ...prev, lastName: undefined, duplicateName: undefined }))
-                            } else if (errors.duplicateName) {
-                                setErrors(prev => ({ ...prev, duplicateName: undefined }))
+                                setErrors(prev => ({ ...prev, lastName: undefined }))
                             }
                         }}
                     />
-                    {errors.lastName && <div style={formStyles.error}>{errors.lastName}</div>}
-                    {errors.duplicateName && <div style={formStyles.error}>{errors.duplicateName}</div>}
-                </div>
+                    {errors.lastName && <ErrorMessage>{errors.lastName}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Address *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.address ? formStyles.errorBorder : {})
+                <FormField>
+                    <FormLabel>Phone *</FormLabel>
+                    <Input
+                        hasError={!!errors.phone}
+                        type="tel"
+                        value={formData.phone}
+                        onChange={e => {
+                            setFormData(prev => ({ ...prev, phone: e.target.value }))
+                            if (errors.phone) {
+                                setErrors(prev => ({ ...prev, phone: undefined }))
+                            }
                         }}
+                    />
+                    {errors.phone && <ErrorMessage>{errors.phone}</ErrorMessage>}
+                </FormField>
+
+                <FormField>
+                    <FormLabel>Address *</FormLabel>
+                    <Input
+                        hasError={!!errors.address}
                         type="text"
                         value={formData.address}
                         onChange={e => {
@@ -237,36 +245,13 @@ export const SalespersonsModal = ({
                             }
                         }}
                     />
-                    {errors.address && <div style={formStyles.error}>{errors.address}</div>}
-                </div>
+                    {errors.address && <ErrorMessage>{errors.address}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Phone *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.phone ? formStyles.errorBorder : {})
-                        }}
-                        type="text"
-                        value={formData.phone}
-                        onChange={e => {
-                            setFormData(prev => ({ ...prev, phone: e.target.value }))
-                            if (errors.phone) {
-                                setErrors(prev => ({ ...prev, phone: undefined }))
-                            }
-                        }}
-                        placeholder="+1 234-567-8900"
-                    />
-                    {errors.phone && <div style={formStyles.error}>{errors.phone}</div>}
-                </div>
-
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Start Date *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.startDate ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>Start Date *</FormLabel>
+                    <Input
+                        hasError={!!errors.startDate}
                         type="date"
                         value={formData.startDate}
                         onChange={e => {
@@ -276,39 +261,30 @@ export const SalespersonsModal = ({
                             }
                         }}
                     />
-                    {errors.startDate && <div style={formStyles.error}>{errors.startDate}</div>}
-                </div>
+                    {errors.startDate && <ErrorMessage>{errors.startDate}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Termination Date</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.terminationDate ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>Termination Date</FormLabel>
+                    <Input
+                        hasError={!!errors.terminationDate}
                         type="date"
                         value={formData.terminationDate || ''}
                         min={formData.startDate}
                         onChange={e => {
-                            setFormData(prev => ({
-                                ...prev,
-                                terminationDate: e.target.value || null
-                            }))
+                            setFormData(prev => ({ ...prev, terminationDate: e.target.value || null }))
                             if (errors.terminationDate) {
                                 setErrors(prev => ({ ...prev, terminationDate: undefined }))
                             }
                         }}
                     />
-                    {errors.terminationDate && <div style={formStyles.error}>{errors.terminationDate}</div>}
-                </div>
+                    {errors.terminationDate && <ErrorMessage>{errors.terminationDate}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Manager *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.manager ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>Manager Name *</FormLabel>
+                    <Input
+                        hasError={!!errors.manager}
                         type="text"
                         value={formData.manager}
                         onChange={e => {
@@ -318,25 +294,29 @@ export const SalespersonsModal = ({
                             }
                         }}
                     />
-                    {errors.manager && <div style={formStyles.error}>{errors.manager}</div>}
-                </div>
+                    {errors.manager && <ErrorMessage>{errors.manager}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.buttonContainer}>
-                    <button
-                        style={{ ...formStyles.button, ...formStyles.cancelButton }}
+                {errors.duplicateName && (
+                    <ErrorMessage>{errors.duplicateName}</ErrorMessage>
+                )}
+
+                <ButtonContainer>
+                    <Button
                         onClick={() => setIsModalOpen(false)}
                         disabled={isSubmitting}
+                        variant='danger'
                     >
                         Cancel
-                    </button>
-                    <button
-                        style={{ ...formStyles.button, ...formStyles.saveButton }}
+                    </Button>
+                    <Button
                         onClick={handleSubmit}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || !!errors.duplicateName}
+                        variant='primary'
                     >
-                        {isSubmitting ? 'Saving...' : (isEditMode ? 'Update' : 'Save')}
-                    </button>
-                </div>
+                        {isSubmitting ? 'Saving...' : (isEditMode ? 'Update' : 'Add Salesperson')}
+                    </Button>
+                </ButtonContainer>
             </div>
         </Modal>
     )

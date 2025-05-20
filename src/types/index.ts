@@ -45,6 +45,7 @@ export interface CommissionReport {
     totalSales: number;
     totalCommission: number;
     salesDetails: Sale[];
+    salespersonName: string;
 }
 
 export interface Discount {

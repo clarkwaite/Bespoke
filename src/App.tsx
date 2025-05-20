@@ -6,17 +6,16 @@ import Products from './components/Products/Products'
 import Sales from './components/Sales/Sales'
 import Salespersons from './components/Salespersons/Salespersons'
 import CommissionReport from './components/Reports/CommissionReport'
-import styles from './App.module.css'
+import { AppContainer, Sidebar, SidebarNav, MainContent, PageHeader } from './appStyles'
 
 const App: React.FC = () => {
   const queryClient = new QueryClient()
   return (
     <QueryClientProvider client={queryClient}>
-
       <Router>
-        <div className={styles.container}>
-          <aside className={styles.sidebar}>
-            <nav>
+        <AppContainer>
+          <Sidebar>
+            <SidebarNav>
               <ul>
                 <li>
                   <NavLink to="/">
@@ -44,13 +43,13 @@ const App: React.FC = () => {
                   </NavLink>
                 </li>
               </ul>
-            </nav>
-          </aside>
+            </SidebarNav>
+          </Sidebar>
 
-          <main className={styles.mainContent}>
-            <header className={styles.header}>
+          <MainContent>
+            <PageHeader>
               <h1>BeSpoked Bikes - Sales Tracking</h1>
-            </header>
+            </PageHeader>
 
             <div>
               <Routes>
@@ -61,8 +60,8 @@ const App: React.FC = () => {
                 <Route path="/reports" element={<CommissionReport />} />
               </Routes>
             </div>
-          </main>
-        </div>
+          </MainContent>
+        </AppContainer>
       </Router>
     </QueryClientProvider>
   )

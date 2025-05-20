@@ -1,7 +1,17 @@
 import React, { useState, useCallback } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { Salesperson } from '../../types'
-import { formStyles } from '../shared/styles'
+import {
+    ContentContainer,
+    PageHeader,
+    TableContainer,
+    Table,
+    TableHeader,
+    TableCell,
+    TableActions,
+    ActionButton,
+    Button,
+} from '../shared/styles'
 import { SalespersonsModal } from './SalespersonsModal'
 import DeleteConfirmationModal from '../shared/DeleteConfirmationModal'
 import { NotificationDisplay, useNotification } from '../../hooks/useNotification'
@@ -119,88 +129,87 @@ const Salespersons: React.FC = () => {
     }, [deleteSalesperson, salespersonToDelete])
 
     return (
-        <div>
-            {notification && (
-                <NotificationDisplay notification={notification} />
-            )}
-
-            <SalespersonsModal
+        <ContentContainer>
+            <NotificationDisplay notification={notification} />            <SalespersonsModal
                 isModalOpen={isModalOpen}
                 setIsModalOpen={setIsModalOpen}
                 salesperson={editingSalesperson}
                 handleSave={handleSaveSalesperson}
-                isEditMode={Boolean(editingSalesperson)}
+                isEditMode={!!editingSalesperson}
                 existingSalespersons={salespersons}
             />
 
             <DeleteConfirmationModal
                 isOpen={deleteModalOpen}
                 onClose={() => setDeleteModalOpen(false)}
-                onConfirm={handleConfirmDelete}
-                itemName={salespersonToDelete ? `${salespersonToDelete.firstName} ${salespersonToDelete.lastName}` : 'this salesperson'}
+                onConfirm={() => {
+                    if (salespersonToDelete) {
+                        deleteSalesperson(salespersonToDelete.id)
+                        setDeleteModalOpen(false)
+                        setSalespersonToDelete(null)
+                    }
+                }}
+                title="Delete Salesperson"
+                itemName="salesperson"
             />
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <PageHeader>
                 <h2>Salespersons</h2>
-                <button
-                    onClick={() => openSalespersonModal()}
-                    style={{ ...formStyles.button, ...formStyles.saveButton }}
-                >
+                <Button variant='primary' onClick={() => openSalespersonModal()}>
                     Add New Salesperson
-                </button>
-            </div>
+                </Button>
+            </PageHeader>
 
             {isLoading ? <LoadingState message='salespersons' /> : !salespersons.length ? <EmptyState message='salespersons' /> : (
-                <table style={formStyles.table}>
-                    <thead>
-                        <tr>
-                            <th style={formStyles.th}>Name</th>
-                            <th style={formStyles.th}>Phone</th>
-                            <th style={formStyles.th}>Start Date</th>
-                            <th style={formStyles.th}>Termination Date</th>
-                            <th style={formStyles.th}>Manager</th>
-                            <th style={formStyles.th}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {salespersons.map(salesperson => (
-                            <tr key={salesperson.id}>
-                                <td style={formStyles.td}>
-                                    {salesperson.firstName} {salesperson.lastName}
-                                </td>
-                                <td style={formStyles.td}>{salesperson.phone}</td>
-                                <td style={formStyles.td}>
-                                    {new Date(salesperson.startDate).toLocaleDateString()}
-                                </td>
-                                <td style={formStyles.td}>
-                                    {salesperson.terminationDate
-                                        ? new Date(salesperson.terminationDate).toLocaleDateString()
-                                        : 'Active'
-                                    }
-                                </td>
-                                <td style={formStyles.td}>{salesperson.manager}</td>
-                                <td style={formStyles.td}>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button
-                                            onClick={() => openSalespersonModal(salesperson)}
-                                            style={{ ...formStyles.button, ...formStyles.saveButton }}
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteClick(salesperson)}
-                                            style={formStyles.deleteButton}
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
-                                </td>
+                <TableContainer>
+                    <Table>
+                        <thead>
+                            <tr>
+                                <TableHeader>Name</TableHeader>
+                                <TableHeader>Phone</TableHeader>
+                                <TableHeader>Address</TableHeader>
+                                <TableHeader>Start Date</TableHeader>
+                                <TableHeader>Termination Date</TableHeader>
+                                <TableHeader>Manager</TableHeader>
+                                <TableHeader>Actions</TableHeader>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {salespersons.map(salesperson => (
+                                <tr key={salesperson.id}>
+                                    <TableCell>{`${salesperson.firstName} ${salesperson.lastName}`}</TableCell>
+                                    <TableCell>{salesperson.phone}</TableCell>
+                                    <TableCell>{salesperson.address}</TableCell>
+                                    <TableCell>{new Date(salesperson.startDate).toLocaleDateString()}</TableCell>
+                                    <TableCell>
+                                        {salesperson.terminationDate
+                                            ? new Date(salesperson.terminationDate).toLocaleDateString()
+                                            : 'N/A'}
+                                    </TableCell>
+                                    <TableCell>{salesperson.manager ? 'Yes' : 'No'}</TableCell>
+                                    <TableCell>
+                                        <TableActions>
+                                            <ActionButton
+                                                action="edit"
+                                                onClick={() => openSalespersonModal(salesperson)}
+                                            >
+                                                Edit
+                                            </ActionButton>
+                                            <ActionButton
+                                                action="delete"
+                                                onClick={() => handleDeleteClick(salesperson)}
+                                            >
+                                                Delete
+                                            </ActionButton>
+                                        </TableActions>
+                                    </TableCell>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </Table>
+                </TableContainer>
             )}
-        </div>
+        </ContentContainer>
     )
 }
 

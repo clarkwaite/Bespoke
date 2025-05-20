@@ -1,10 +1,20 @@
 import React, { useState, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { CommissionReport, Salesperson, Sale } from '../../types'
-import Modal from '../shared/Modal'
-import { formStyles } from '../shared/styles'
+import {
+    ContentContainer,
+    ReportHeader,
+    ReportFilters,
+    FormField,
+    FormLabel,
+    Select,
+    ApplyFilterButton
+} from '../shared/styles'
+import { CommissionDetailsModal } from './CommissionDetailsModal'
 import { LoadingState } from '../shared/LoadingState'
-import { EmptyCommissionReportState } from '../shared/EmptyState'
+import { ErrorState } from '../shared/ErrorState'
+import { EmptyCommissionReportState } from './EmptyCommissionReportState'
+import { CommissionReportTable } from './CommissionReportTable'
 
 const SALES_QUERY_KEY = ['sales']
 const SALESPERSONS_QUERY_KEY = ['salespersons']
@@ -49,11 +59,8 @@ const CommissionReports: React.FC = () => {
         return saleYear === appliedYear && saleQuarter === appliedQuarter
     }, [appliedYear, appliedQuarter])
 
-    const calculateCommissionReports = useCallback((salespersons: Salesperson[], sales: Sale[]): CommissionReport[] => {
-        // Filter sales by selected quarter
+    const generateCommissionReports = useCallback((): CommissionReport[] => {
         const filteredSales = sales.filter(sale => isDateInSelectedQuarter(sale.date))
-
-        // For each salesperson, collect their sales and calculate totals
         return salespersons.map(sp => {
             const salesList = filteredSales.filter(sale => sale.salesPersonId === sp.id)
             let totalSales = 0
@@ -68,6 +75,7 @@ const CommissionReports: React.FC = () => {
 
             return {
                 salespersonId: sp.id,
+                salespersonName: `${sp.firstName} ${sp.lastName}`,
                 totalSales,
                 totalCommission,
                 salesDetails: salesList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -75,215 +83,95 @@ const CommissionReports: React.FC = () => {
         })
             .filter(report => report.salesDetails.length > 0)
             .sort((a, b) => b.totalCommission - a.totalCommission)
-    }, [isDateInSelectedQuarter])
-
-    const getSalespersonName = (id: number): string => {
-        const salesperson = salespersons.find(sp => sp.id === id)
-        return salesperson ? `${salesperson.firstName} ${salesperson.lastName}` : 'Unknown'
-    }
-
-    const handleApplyFilter = () => {
-        setAppliedYear(selectedYear)
-        setAppliedQuarter(selectedQuarter)
-    }
-
-    const handleClearFilter = () => {
-        setSelectedYear(currentYear)
-        setSelectedQuarter(currentQuarter)
-        setAppliedYear(currentYear)
-        setAppliedQuarter(currentQuarter)
-    }
-
-    const getYearsToShow = () => {
-        return [currentYear - 2, currentYear - 1, currentYear]
-    }
-
-    const reports = calculateCommissionReports(salespersons, sales)
-    const isLoading = isSalespersonsLoading || isSalesLoading
-    const error = salespersonsError || salesError
-
-    if (error) {
-        return (
-            <div style={{
-                padding: '10px',
-                margin: '20px',
-                borderRadius: '4px',
-                backgroundColor: '#fee2e2',
-                color: '#dc2626'
-            }}>
-                {error instanceof Error ? error.message : 'An error occurred while loading the data'}
-            </div>
-        )
-    }
+    }, [isDateInSelectedQuarter, sales, salespersons])
 
     return (
-        <div>
-            <Modal
-                isOpen={isDetailsModalOpen}
-                onRequestClose={() => setIsDetailsModalOpen(false)}
-                title={`Sales Details - ${selectedReport ? getSalespersonName(selectedReport.salespersonId) : ''}`}
-                showConfirmButton={false}
-            >
-                {selectedReport && (
-                    <div>
-                        <table style={formStyles.table}>
-                            <thead>
-                                <tr>
-                                    <th style={formStyles.th}>Date</th>
-                                    <th style={formStyles.th}>Product</th>
-                                    <th style={formStyles.th}>Customer</th>
-                                    <th style={formStyles.th}>Sale Price</th>
-                                    <th style={formStyles.th}>Commission</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {selectedReport.salesDetails.map(sale => (
-                                    <tr key={sale.id}>
-                                        <td style={formStyles.td}>
-                                            {new Date(sale.date).toLocaleDateString()}
-                                        </td>
-                                        <td style={formStyles.td}>{sale.product.name}</td>
-                                        <td style={formStyles.td}>
-                                            {`${sale.customer.firstName} ${sale.customer.lastName}`}
-                                        </td>
-                                        <td style={{ ...formStyles.td, textAlign: 'right' }}>
-                                            ${sale.product.salePrice.toFixed(2)}
-                                        </td>
-                                        <td style={{ ...formStyles.td, textAlign: 'right' }}>
-                                            ${(sale.product.salePrice * (sale.product.commissionPercentage / 100)).toFixed(2)}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colSpan={3} style={{ ...formStyles.td, textAlign: 'right', fontWeight: 'bold' }}>
-                                        Total:
-                                    </td>
-                                    <td style={{ ...formStyles.td, textAlign: 'right', fontWeight: 'bold' }}>
-                                        ${selectedReport.totalSales.toFixed(2)}
-                                    </td>
-                                    <td style={{ ...formStyles.td, textAlign: 'right', fontWeight: 'bold' }}>
-                                        ${selectedReport.totalCommission.toFixed(2)}
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                        <div style={{ marginTop: '20px', textAlign: 'right' }}>
-                            <button
-                                style={formStyles.button}
-                                onClick={() => setIsDetailsModalOpen(false)}
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </Modal>
+        <ContentContainer>
+            <ReportHeader>
+                <h2>Commission Reports</h2>
+            </ReportHeader>
 
-            <h2>Quarterly Commission Reports</h2>
-
-            <div style={formStyles.filterContainer}>
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Year</label>
-                    <select
-                        style={formStyles.select}
+            <ReportFilters>
+                <FormField>
+                    <FormLabel>Year</FormLabel>
+                    <Select
                         value={selectedYear}
-                        onChange={e => setSelectedYear(parseInt(e.target.value))}
+                        onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                     >
-                        {getYearsToShow().map(year => {
-                            return (
-                                <option key={year} value={year}>
-                                    {year}
-                                </option>
-                            )
-                        })}
-                    </select>
-                </div>
+                        {Array.from(
+                            { length: 5 },
+                            (_, i) => currentYear - i
+                        ).map(year => (
+                            <option key={year} value={year}>{year}</option>
+                        ))}
+                    </Select>
+                </FormField>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Quarter</label>
-                    <select
-                        style={formStyles.select}
+                <FormField>
+                    <FormLabel>Quarter</FormLabel>
+                    <Select
                         value={selectedQuarter}
-                        onChange={e => setSelectedQuarter(parseInt(e.target.value))}
+                        onChange={(e) => setSelectedQuarter(parseInt(e.target.value))}
                     >
                         {[1, 2, 3, 4].map(quarter => (
-                            <option key={quarter} value={quarter}>
+                            <option
+                                key={quarter}
+                                value={quarter}
+                                disabled={selectedYear === currentYear && quarter > currentQuarter}
+                            >
                                 Q{quarter}
                             </option>
                         ))}
-                    </select>
-                </div>
+                    </Select>
+                </FormField>
 
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
-                    <button
-                        onClick={handleApplyFilter}
-                        style={selectedYear === appliedYear && selectedQuarter === appliedQuarter ? formStyles.disabledButton : formStyles.dateApplyButton}
-                        disabled={selectedYear === appliedYear && selectedQuarter === appliedQuarter}
-                    >
-                        Apply Filter
-                    </button>
-                    {(appliedYear !== currentYear || appliedQuarter !== currentQuarter) && (
-                        <button
-                            onClick={handleClearFilter}
-                            style={formStyles.deleteButton}
-                        >
-                            Clear Filter
-                        </button>
-                    )}
-                </div>
-            </div>
+                <ApplyFilterButton
+                    onClick={() => {
+                        setAppliedYear(selectedYear)
+                        setAppliedQuarter(selectedQuarter)
+                    }}
+                    action='edit'
+                >
+                    Apply Filter
+                </ApplyFilterButton>
+            </ReportFilters>
 
-            {isLoading ? (
-                <LoadingState message='commission reports' />
-            ) : !reports.length ? (
+            {/* Render appropriate state based on conditions */}
+            {isSalespersonsLoading || isSalesLoading ? (
+                <LoadingState message="commission report" />
+            ) : salespersonsError ? (
+                <ErrorState message={`Error loading salespersons: ${salespersonsError.message}`} />
+            ) : salesError ? (
+                <ErrorState message={`Error loading sales: ${salesError.message}`} />
+            ) : !generateCommissionReports().length ? (
                 <EmptyCommissionReportState
                     appliedQuarter={appliedQuarter}
                     appliedYear={appliedYear}
                     currentYear={currentYear}
                     currentQuarter={currentQuarter}
-                    handleClearFilter={handleClearFilter}
+                    handleClearFilter={() => {
+                        setAppliedYear(currentYear)
+                        setAppliedQuarter(currentQuarter)
+                    }}
                 />
             ) : (
-                <table style={formStyles.table}>
-                    <thead>
-                        <tr>
-                            <th style={formStyles.th}>Salesperson</th>
-                            <th style={{ ...formStyles.th, textAlign: 'right' }}>Total Sales</th>
-                            <th style={{ ...formStyles.th, textAlign: 'right' }}>Total Commission</th>
-                            <th style={{ ...formStyles.th, textAlign: 'center' }}>Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {reports.map(report => (
-                            <tr key={report.salespersonId}>
-                                <td style={formStyles.td}>
-                                    {getSalespersonName(report.salespersonId)}
-                                </td>
-                                <td style={{ ...formStyles.td, textAlign: 'right' }}>
-                                    ${report.totalSales.toFixed(2)}
-                                </td>
-                                <td style={{ ...formStyles.td, textAlign: 'right' }}>
-                                    ${report.totalCommission.toFixed(2)}
-                                </td>
-                                <td style={{ ...formStyles.td, textAlign: 'center' }}>
-                                    <button
-                                        onClick={() => {
-                                            setSelectedReport(report)
-                                            setIsDetailsModalOpen(true)
-                                        }}
-                                        style={formStyles.button}
-                                    >
-                                        View Details
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                <>
+                    <CommissionReportTable
+                        reports={generateCommissionReports()}
+                        salespersons={salespersons}
+                        onViewDetails={(report) => {
+                            setSelectedReport(report)
+                            setIsDetailsModalOpen(true)
+                        }} />
+
+                    <CommissionDetailsModal
+                        isOpen={isDetailsModalOpen}
+                        onClose={() => setIsDetailsModalOpen(false)}
+                        report={selectedReport}
+                    />
+                </>
             )}
-        </div>
+        </ContentContainer>
     )
 }
 

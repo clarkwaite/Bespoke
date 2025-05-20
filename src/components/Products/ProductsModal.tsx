@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Product } from "../../types"
-import { formStyles } from "../shared/styles"
 import Modal from "../shared/Modal"
+import {
+    FormField,
+    FormLabel,
+    Input,
+    ErrorMessage,
+    ButtonContainer,
+    Button,
+} from '../shared/styles'
 
 type ValidationErrors = {
     name?: string
@@ -138,56 +145,54 @@ export const ProductsModal = ({
             showConfirmButton={false}
         >
             <div>
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Name *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.name || errors.duplicateProduct ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>Name *</FormLabel>
+                    <Input
+                        hasError={!!errors.name}
                         type="text"
                         value={formData.name}
                         onChange={e => {
                             setFormData(prev => ({ ...prev, name: e.target.value }))
                             if (errors.name) {
-                                setErrors(prev => ({ ...prev, name: undefined, duplicateProduct: undefined }))
-                            } else if (errors.duplicateProduct) {
+                                setErrors(prev => ({ ...prev, name: undefined }))
+                            }
+                            const duplicateError = checkForDuplicates({ ...formData, name: e.target.value })
+                            if (duplicateError) {
+                                setErrors(prev => ({ ...prev, duplicateProduct: duplicateError }))
+                            } else {
                                 setErrors(prev => ({ ...prev, duplicateProduct: undefined }))
                             }
                         }}
                     />
-                    {errors.name && <div style={formStyles.error}>{errors.name}</div>}
-                    {errors.duplicateProduct && <div style={formStyles.error}>{errors.duplicateProduct}</div>}
-                </div>
+                    {errors.name && <ErrorMessage>{errors.name}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Manufacturer *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.manufacturer || errors.duplicateProduct ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>Manufacturer *</FormLabel>
+                    <Input
+                        hasError={!!errors.manufacturer}
                         type="text"
                         value={formData.manufacturer}
                         onChange={e => {
                             setFormData(prev => ({ ...prev, manufacturer: e.target.value }))
                             if (errors.manufacturer) {
-                                setErrors(prev => ({ ...prev, manufacturer: undefined, duplicateProduct: undefined }))
-                            } else if (errors.duplicateProduct) {
+                                setErrors(prev => ({ ...prev, manufacturer: undefined }))
+                            }
+                            const duplicateError = checkForDuplicates({ ...formData, manufacturer: e.target.value })
+                            if (duplicateError) {
+                                setErrors(prev => ({ ...prev, duplicateProduct: duplicateError }))
+                            } else {
                                 setErrors(prev => ({ ...prev, duplicateProduct: undefined }))
                             }
                         }}
                     />
-                    {errors.manufacturer && <div style={formStyles.error}>{errors.manufacturer}</div>}
-                </div>
+                    {errors.manufacturer && <ErrorMessage>{errors.manufacturer}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Style *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.style ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>Style *</FormLabel>
+                    <Input
+                        hasError={!!errors.style}
                         type="text"
                         value={formData.style}
                         onChange={e => {
@@ -197,109 +202,101 @@ export const ProductsModal = ({
                             }
                         }}
                     />
-                    {errors.style && <div style={formStyles.error}>{errors.style}</div>}
-                </div>
+                    {errors.style && <ErrorMessage>{errors.style}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Purchase Price ($) *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.purchasePrice ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>Purchase Price *</FormLabel>
+                    <Input
+                        hasError={!!errors.purchasePrice}
                         type="number"
-                        min="0"
                         step="0.01"
+                        min="0"
                         value={formData.purchasePrice}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, purchasePrice: parseFloat(e.target.value) }))
+                            setFormData(prev => ({ ...prev, purchasePrice: parseFloat(e.target.value) || 0 }))
                             if (errors.purchasePrice) {
                                 setErrors(prev => ({ ...prev, purchasePrice: undefined }))
                             }
                         }}
                     />
-                    {errors.purchasePrice && <div style={formStyles.error}>{errors.purchasePrice}</div>}
-                </div>
+                    {errors.purchasePrice && <ErrorMessage>{errors.purchasePrice}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Sale Price ($) *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.salePrice ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>Sale Price *</FormLabel>
+                    <Input
+                        hasError={!!errors.salePrice}
                         type="number"
-                        min="0"
                         step="0.01"
+                        min="0"
                         value={formData.salePrice}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, salePrice: parseFloat(e.target.value) }))
+                            setFormData(prev => ({ ...prev, salePrice: parseFloat(e.target.value) || 0 }))
                             if (errors.salePrice) {
                                 setErrors(prev => ({ ...prev, salePrice: undefined }))
                             }
                         }}
                     />
-                    {errors.salePrice && <div style={formStyles.error}>{errors.salePrice}</div>}
-                </div>
+                    {errors.salePrice && <ErrorMessage>{errors.salePrice}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Quantity on Hand *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.qtyOnHand ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>Quantity on Hand *</FormLabel>
+                    <Input
+                        hasError={!!errors.qtyOnHand}
                         type="number"
                         min="0"
                         value={formData.qtyOnHand}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, qtyOnHand: parseInt(e.target.value) }))
+                            setFormData(prev => ({ ...prev, qtyOnHand: parseInt(e.target.value) || 0 }))
                             if (errors.qtyOnHand) {
                                 setErrors(prev => ({ ...prev, qtyOnHand: undefined }))
                             }
                         }}
                     />
-                    {errors.qtyOnHand && <div style={formStyles.error}>{errors.qtyOnHand}</div>}
-                </div>
+                    {errors.qtyOnHand && <ErrorMessage>{errors.qtyOnHand}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Commission Percentage (%) *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.commissionPercentage ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>Commission Percentage *</FormLabel>
+                    <Input
+                        hasError={!!errors.commissionPercentage}
                         type="number"
+                        step="0.1"
                         min="0"
                         max="100"
-                        step="0.1"
                         value={formData.commissionPercentage}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, commissionPercentage: parseFloat(e.target.value) }))
+                            setFormData(prev => ({ ...prev, commissionPercentage: parseFloat(e.target.value) || 0 }))
                             if (errors.commissionPercentage) {
                                 setErrors(prev => ({ ...prev, commissionPercentage: undefined }))
                             }
                         }}
                     />
-                    {errors.commissionPercentage && <div style={formStyles.error}>{errors.commissionPercentage}</div>}
-                </div>
+                    {errors.commissionPercentage && <ErrorMessage>{errors.commissionPercentage}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.buttonContainer}>
-                    <button
-                        style={{ ...formStyles.button, ...formStyles.cancelButton }}
+                {errors.duplicateProduct && (
+                    <ErrorMessage>{errors.duplicateProduct}</ErrorMessage>
+                )}
+
+                <ButtonContainer>
+                    <Button
                         onClick={() => setIsModalOpen(false)}
                         disabled={isSubmitting}
+                        variant='danger'
                     >
                         Cancel
-                    </button>
-                    <button
-                        style={{ ...formStyles.button, ...formStyles.saveButton }}
+                    </Button>
+                    <Button
                         onClick={handleSubmit}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || !!errors.duplicateProduct}
+                        variant='primary'
                     >
-                        {isSubmitting ? 'Saving...' : (isEditMode ? 'Update' : 'Save')}
-                    </button>
-                </div>
+                        {isSubmitting ? 'Saving...' : (isEditMode ? 'Update' : 'Add Product')}
+                    </Button>
+                </ButtonContainer>
             </div>
         </Modal>
     )

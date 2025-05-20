@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react'
-import { formStyles } from "../shared/styles"
 import Modal from "../shared/Modal"
 import { SaleFormData } from './types'
 import { useQuery } from '@tanstack/react-query'
 import { CUSTOMERS_QUERY_KEY, PRODUCTS_QUERY_KEY, SALESPERSONS_QUERY_KEY } from '../shared/constants'
 import { Customer, Product, Salesperson } from '../../types'
+import {
+    FormField,
+    FormLabel,
+    Select,
+    Input,
+    ErrorMessage,
+    ButtonContainer,
+    Button,
+} from '../shared/styles'
 
 type ValidationErrors = {
     productId?: string
@@ -124,13 +132,10 @@ export const SalesModal = ({
             showConfirmButton={false}
         >
             <div>
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Product *</label>
-                    <select
-                        style={{
-                            ...formStyles.select,
-                            ...(errors.productId ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>Product *</FormLabel>
+                    <Select
+                        hasError={!!errors.productId}
                         value={formData.productId || ''}
                         onChange={e => {
                             setFormData(prev => ({ ...prev, productId: parseInt(e.target.value) }))
@@ -145,17 +150,14 @@ export const SalesModal = ({
                                 {product.name} - ${product.salePrice}
                             </option>
                         ))}
-                    </select>
-                    {errors.productId && <div style={formStyles.error}>{errors.productId}</div>}
-                </div>
+                    </Select>
+                    {errors.productId && <ErrorMessage>{errors.productId}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Salesperson *</label>
-                    <select
-                        style={{
-                            ...formStyles.select,
-                            ...(errors.salesPersonId ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>Salesperson *</FormLabel>
+                    <Select
+                        hasError={!!errors.salesPersonId}
                         value={formData.salesPersonId || ''}
                         onChange={e => {
                             setFormData(prev => ({ ...prev, salesPersonId: parseInt(e.target.value) }))
@@ -170,17 +172,14 @@ export const SalesModal = ({
                                 {salesperson.firstName} {salesperson.lastName}
                             </option>
                         ))}
-                    </select>
-                    {errors.salesPersonId && <div style={formStyles.error}>{errors.salesPersonId}</div>}
-                </div>
+                    </Select>
+                    {errors.salesPersonId && <ErrorMessage>{errors.salesPersonId}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Customer *</label>
-                    <select
-                        style={{
-                            ...formStyles.select,
-                            ...(errors.customerId ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>Customer *</FormLabel>
+                    <Select
+                        hasError={!!errors.customerId}
                         value={formData.customerId || ''}
                         onChange={e => {
                             setFormData(prev => ({ ...prev, customerId: parseInt(e.target.value) }))
@@ -195,17 +194,14 @@ export const SalesModal = ({
                                 {customer.firstName} {customer.lastName}
                             </option>
                         ))}
-                    </select>
-                    {errors.customerId && <div style={formStyles.error}>{errors.customerId}</div>}
-                </div>
+                    </Select>
+                    {errors.customerId && <ErrorMessage>{errors.customerId}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Sale Date *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.date ? formStyles.errorBorder : {})
-                        }}
+                <FormField>
+                    <FormLabel>Sale Date *</FormLabel>
+                    <Input
+                        hasError={!!errors.date}
                         type="date"
                         value={formData.date}
                         max={new Date().toISOString().split('T')[0]}
@@ -216,25 +212,25 @@ export const SalesModal = ({
                             }
                         }}
                     />
-                    {errors.date && <div style={formStyles.error}>{errors.date}</div>}
-                </div>
+                    {errors.date && <ErrorMessage>{errors.date}</ErrorMessage>}
+                </FormField>
 
-                <div style={formStyles.buttonContainer}>
-                    <button
-                        style={{ ...formStyles.button, ...formStyles.cancelButton }}
+                <ButtonContainer>
+                    <Button
                         onClick={() => setIsModalOpen(false)}
                         disabled={isSubmitting}
+                        variant='danger'
                     >
                         Cancel
-                    </button>
-                    <button
-                        style={{ ...formStyles.button, ...formStyles.saveButton }}
+                    </Button>
+                    <Button
                         onClick={handleSubmit}
                         disabled={isSubmitting}
+                        variant='primary'
                     >
                         {isSubmitting ? 'Saving...' : (isEditMode ? 'Update' : 'Create Sale')}
-                    </button>
-                </div>
+                    </Button>
+                </ButtonContainer>
             </div>
         </Modal>
     )
