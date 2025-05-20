@@ -7,6 +7,8 @@ import { DateRange, SaleFormData } from './types'
 import { isBetweenTwoDates } from '../shared/helpers'
 import { NotificationDisplay, useNotification } from '../../hooks/useNotification'
 import { SALES_QUERY_KEY } from '../shared/constants'
+import { LoadingState } from '../shared/LoadingState'
+import { EmptyState } from '../shared/EmptyState'
 
 const Sales: React.FC = () => {
     const queryClient = useQueryClient()
@@ -15,7 +17,7 @@ const Sales: React.FC = () => {
     const [appliedDateFilter, setAppliedDateFilter] = useState<DateRange>({ startDate: '', endDate: '' })
     const { notification, showNotification } = useNotification()
 
-    const { data: sales = [], isLoading: isSalesLoading } = useQuery({
+    const { data: sales = [], isLoading } = useQuery({
         queryKey: SALES_QUERY_KEY,
         queryFn: async () => {
             const response = await fetch('/api/sales')
@@ -135,11 +137,8 @@ const Sales: React.FC = () => {
                 </div>
             </div>
 
-            {isSalesLoading ? (
-                <div style={{ textAlign: 'center', padding: '20px' }}>Loading sales...</div>
-            ) : !sales.length ? (
-                <div style={{ textAlign: 'center', padding: '20px' }}>No sales found.</div>
-            ) : (
+            {isLoading ? <LoadingState message='sales' /> : !sales.length ? <EmptyState message='sales' /> : (
+
                 <table style={formStyles.table}>
                     <thead>
                         <tr>
