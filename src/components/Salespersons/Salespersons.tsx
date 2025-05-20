@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Salesperson, ApiResponse } from '../../types';
-import { formStyles } from '../shared/formStyles';
+import { formStyles } from '../shared/styles';
 import { SalespersonsModal } from './SalespersonsModal';
 
 const Salespersons: React.FC = () => {
@@ -41,7 +41,7 @@ const Salespersons: React.FC = () => {
     };
 
     const isDuplicateSalesperson = (salesperson: Omit<Salesperson, 'id'> & { id?: number }) => {
-        return salespersons.some(sp => 
+        return salespersons.some(sp =>
             sp.id !== salesperson.id && // Skip current salesperson when editing
             sp.firstName.toLowerCase() === salesperson.firstName.toLowerCase() &&
             sp.lastName.toLowerCase() === salesperson.lastName.toLowerCase() &&
@@ -66,7 +66,7 @@ const Salespersons: React.FC = () => {
                     },
                     body: JSON.stringify(salesperson),
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to update salesperson');
                 }
@@ -128,7 +128,7 @@ const Salespersons: React.FC = () => {
                 throw new Error('Failed to delete salesperson');
             }
 
-            setSalespersons(prevSalespersons => 
+            setSalespersons(prevSalespersons =>
                 prevSalespersons.filter(sp => sp.id !== salespersonId)
             );
             showNotification('Salesperson deleted successfully', 'success');
@@ -202,7 +202,7 @@ const Salespersons: React.FC = () => {
                                     {new Date(salesperson.startDate).toLocaleDateString()}
                                 </td>
                                 <td style={formStyles.td}>
-                                    {salesperson.terminationDate 
+                                    {salesperson.terminationDate
                                         ? new Date(salesperson.terminationDate).toLocaleDateString()
                                         : 'Active'
                                     }
@@ -218,11 +218,7 @@ const Salespersons: React.FC = () => {
                                         </button>
                                         <button
                                             onClick={() => handleDeleteSalesperson(salesperson.id)}
-                                            style={{ 
-                                                ...formStyles.button,
-                                                backgroundColor: '#dc2626',
-                                                borderColor: '#dc2626'
-                                            }}
+                                            style={formStyles.deleteButton}
                                         >
                                             Delete
                                         </button>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Customer } from "../../types";
-import { formStyles } from "../shared/formStyles";
+import { formStyles } from "../shared/styles";
 import Modal from "../shared/Modal"
 
 type ValidationErrors = {

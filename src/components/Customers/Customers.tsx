@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Customer } from '../../types';
-import { formStyles } from '../shared/formStyles';
+import { formStyles } from '../shared/styles';
 import { CustomersModal } from './CustomersModal';
 
 type ErrorMessage = {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Salesperson } from "../../types";
-import { formStyles } from "../shared/formStyles";
+import { formStyles } from "../shared/styles";
 import Modal from "../shared/Modal"
 
 type ValidationErrors = {
@@ -11,6 +11,7 @@ type ValidationErrors = {
     startDate?: string;
     terminationDate?: string;
     manager?: string;
+    duplicateName?: string;
 };
 
 type SalespersonFormData = Omit<Salesperson, 'id'> & { id?: number };
@@ -24,11 +25,11 @@ type SalespersonsModalProps = {
     existingSalespersons: Salesperson[];
 }
 
-export const SalespersonsModal = ({ 
-    isModalOpen, 
-    setIsModalOpen, 
-    salesperson, 
-    handleSave, 
+export const SalespersonsModal = ({
+    isModalOpen,
+    setIsModalOpen,
+    salesperson,
+    handleSave,
     isEditMode,
     existingSalespersons
 }: SalespersonsModalProps) => {
@@ -66,19 +67,19 @@ export const SalespersonsModal = ({
     }, [salesperson, isModalOpen]);
 
     const checkForDuplicates = (data: SalespersonFormData) => {
-        const phoneDuplicate = existingSalespersons.find(sp => 
-            (
-                sp.id !== (isEditMode ? salesperson?.id : undefined) && // Skip current salesperson when editing
-                sp.phone === data.phone
-                )
+        const phoneDuplicate = existingSalespersons.find(sp =>
+        (
+            sp.id !== (isEditMode ? salesperson?.id : undefined) && // Skip current salesperson when editing
+            sp.phone === data.phone
+        )
         );
 
-        const nameDuplicate = existingSalespersons.find(sp => 
-            (
-                sp.id !== (isEditMode ? salesperson?.id : undefined) && // Skip current salesperson when editing
-                sp.firstName === data.firstName && 
-                sp.lastName === data.lastName
-            )
+        const nameDuplicate = existingSalespersons.find(sp =>
+        (
+            sp.id !== (isEditMode ? salesperson?.id : undefined) && // Skip current salesperson when editing
+            sp.firstName === data.firstName &&
+            sp.lastName === data.lastName
+        )
         );
 
         return {
@@ -89,20 +90,20 @@ export const SalespersonsModal = ({
 
     const validateForm = (): boolean => {
         const newErrors: ValidationErrors = {};
-        
+
         // Required field validations
         if (!formData.firstName.trim()) {
             newErrors.firstName = 'First name is required';
         } else if (formData.firstName.length < 2) {
             newErrors.firstName = 'First name must be at least 2 characters';
         }
-        
+
         if (!formData.lastName.trim()) {
             newErrors.lastName = 'Last name is required';
         } else if (formData.lastName.length < 2) {
             newErrors.lastName = 'Last name must be at least 2 characters';
         }
-        
+
         if (!formData.phone.trim()) {
             newErrors.phone = 'Phone is required';
         } else if (!/^\+?[\d\s-]{10,}$/.test(formData.phone.replace(/[\s-]/g, ''))) {
@@ -114,19 +115,19 @@ export const SalespersonsModal = ({
             const duplicateError = checkForDuplicates(formData);
             if (duplicateError) {
                 if (duplicateError.name) {
-                    newErrors.firstName = duplicateError.name;
-                    newErrors.lastName = duplicateError.name;
+                    console.log("dupe error", duplicateError.name);
+                    newErrors.duplicateName = duplicateError.name;
                 }
                 if (duplicateError.phone) {
                     newErrors.phone = duplicateError.phone;
                 }
             }
         }
-        
+
         if (!formData.address.trim()) {
             newErrors.address = 'Address is required';
         }
-        
+
         if (!formData.startDate) {
             newErrors.startDate = 'Start date is required';
         } else {
@@ -136,12 +137,12 @@ export const SalespersonsModal = ({
                 newErrors.startDate = 'Start date cannot be in the future';
             }
         }
-        
+
         // Termination date validation
         if (formData.terminationDate) {
             const startDate = new Date(formData.startDate);
             const termDate = new Date(formData.terminationDate);
-            
+
             if (termDate < startDate) {
                 newErrors.terminationDate = 'Termination date cannot be before start date';
             }
@@ -149,7 +150,7 @@ export const SalespersonsModal = ({
                 newErrors.terminationDate = 'Termination date cannot be in the future';
             }
         }
-        
+
         if (!formData.manager.trim()) {
             newErrors.manager = 'Manager name is required';
         } else if (formData.manager.length < 2) {
@@ -180,42 +181,48 @@ export const SalespersonsModal = ({
             showConfirmButton={false}
         >
             <div>
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>First Name *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.firstName ? formStyles.errorBorder : {})
-                        }}
-                        type="text"
-                        value={formData.firstName}
-                        onChange={e => {
-                            setFormData(prev => ({ ...prev, firstName: e.target.value }));
-                            if (errors.firstName) {
-                                setErrors(prev => ({ ...prev, firstName: undefined }));
-                            }
-                        }}
-                    />
-                    {errors.firstName && <div style={formStyles.error}>{errors.firstName}</div>}
-                </div>
+                    <div style={formStyles.field}>
+                        <label style={formStyles.label}>First Name *</label>
+                        <input
+                            style={{
+                                ...formStyles.input,
+                                ...(errors.firstName || errors.duplicateName ? formStyles.errorBorder : {})
+                            }}
+                            type="text"
+                            value={formData.firstName}
+                            onChange={e => {
+                                setFormData(prev => ({ ...prev, firstName: e.target.value }));
+                                if (errors.firstName) {
+                                    setErrors(prev => ({ ...prev, firstName: undefined, duplicateName: undefined }));
+                                } else if (errors.duplicateName) {
+                                    setErrors(prev => ({ ...prev, duplicateName: undefined }));
+                                }
+                            }}
+                        />
+                        {errors.firstName && <div style={formStyles.error}>{errors.firstName}</div>}
+                        {errors.duplicateName && <div style={formStyles.error}>{errors.duplicateName}</div>}
+                    </div>
 
-                <div style={formStyles.field}>
-                    <label style={formStyles.label}>Last Name *</label>
-                    <input
-                        style={{
-                            ...formStyles.input,
-                            ...(errors.lastName ? formStyles.errorBorder : {})
-                        }}
-                        type="text"
-                        value={formData.lastName}
-                        onChange={e => {
-                            setFormData(prev => ({ ...prev, lastName: e.target.value }));
-                            if (errors.lastName) {
-                                setErrors(prev => ({ ...prev, lastName: undefined }));
-                            }
-                        }}
-                    />
-                    {errors.lastName && <div style={formStyles.error}>{errors.lastName}</div>}
+                    <div style={formStyles.field}>
+                        <label style={formStyles.label}>Last Name *</label>
+                        <input
+                            style={{
+                                ...formStyles.input,
+                                ...(errors.lastName || errors.duplicateName ? formStyles.errorBorder : {})
+                            }}
+                            type="text"
+                            value={formData.lastName}
+                            onChange={e => {
+                                setFormData(prev => ({ ...prev, lastName: e.target.value }));
+                                if (errors.lastName) {
+                                    setErrors(prev => ({ ...prev, lastName: undefined, duplicateName: undefined }));
+                                } else if (errors.duplicateName) {
+                                    setErrors(prev => ({ ...prev, duplicateName: undefined }));
+                                }
+                            }}
+                        />
+                        {errors.lastName && <div style={formStyles.error}>{errors.lastName}</div>}
+                        {errors.duplicateName && <div style={formStyles.error}>{errors.duplicateName}</div>}
                 </div>
 
                 <div style={formStyles.field}>
@@ -287,9 +294,9 @@ export const SalespersonsModal = ({
                         value={formData.terminationDate || ''}
                         min={formData.startDate}
                         onChange={e => {
-                            setFormData(prev => ({ 
-                                ...prev, 
-                                terminationDate: e.target.value || null 
+                            setFormData(prev => ({
+                                ...prev,
+                                terminationDate: e.target.value || null
                             }));
                             if (errors.terminationDate) {
                                 setErrors(prev => ({ ...prev, terminationDate: undefined }));

@@ -1,133 +1,152 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { CommissionReport, Salesperson, Sale, ApiResponse } from '../../types';
+import { CommissionReport, Salesperson, Sale } from '../../types';
 import Modal from '../shared/Modal';
-import { formStyles } from '../shared/formStyles';
+import { formStyles } from '../shared/styles';
+
+type ErrorMessage = {
+    message: string;
+    type: 'error' | 'success';
+};
 
 const CommissionReports: React.FC = () => {
     const [reports, setReports] = useState<CommissionReport[]>([]);
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [selectedQuarter, setSelectedQuarter] = useState<number>(Math.floor(new Date().getMonth() / 3) + 1);
+    const [appliedYear, setAppliedYear] = useState<number>(new Date().getFullYear());
+    const [appliedQuarter, setAppliedQuarter] = useState<number>(Math.floor(new Date().getMonth() / 3) + 1);
     const [salespersons, setSalespersons] = useState<Salesperson[]>([]);
     const [selectedReport, setSelectedReport] = useState<CommissionReport | null>(null);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-    const [alertModalConfig, setAlertModalConfig] = useState({
-        isOpen: false,
-        message: ''
-    });
+    const [isLoading, setIsLoading] = useState(false);
+    const [notification, setNotification] = useState<ErrorMessage | null>(null);
+    const currentYear = new Date().getFullYear();
+    const currentQuarter = Math.floor(new Date().getMonth() / 3) + 1;
 
-    const showAlert = (message: string) => {
-        setAlertModalConfig({ isOpen: true, message });
-    };
+    const showNotification = useCallback((message: string, type: 'error' | 'success') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 5000);
+    }, []);
+
+    const isDateInSelectedQuarter = useCallback((date: string) => {
+        const saleDate = new Date(date);
+        const saleYear = saleDate.getFullYear();
+        const saleQuarter = Math.floor(saleDate.getMonth() / 3) + 1;
+        return saleYear === appliedYear && saleQuarter === appliedQuarter;
+    }, [appliedYear, appliedQuarter]);
+
+    const calculateCommissionReports = useCallback((salespersons: Salesperson[], sales: Sale[]): CommissionReport[] => {
+        // Filter sales by selected quarter
+        const filteredSales = sales.filter(sale => isDateInSelectedQuarter(sale.date));
+
+        // For each salesperson, collect their sales and calculate totals
+        return salespersons.map(sp => {
+            const salesList = filteredSales.filter(sale => sale.salesPersonId === sp.id);
+            let totalSales = 0;
+            let totalCommission = 0;
+
+            salesList.forEach(sale => {
+                const saleAmount = sale.product.salePrice;
+                const commissionPercentage = sale.product.commissionPercentage;
+                totalSales += saleAmount;
+                totalCommission += (saleAmount * (commissionPercentage / 100));
+            });
+
+            return {
+                salespersonId: sp.id,
+                totalSales,
+                totalCommission,
+                salesDetails: salesList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            };
+        })
+            .filter(report => report.salesDetails.length > 0)
+            .sort((a, b) => b.totalCommission - a.totalCommission);
+    }, [isDateInSelectedQuarter]);
 
     const fetchSalespersonsAndSales = useCallback(async () => {
+        setIsLoading(true);
         try {
-            // Fetch salespersons
             const salespersonsResponse = await fetch('/api/salespersons', {
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 }
             });
+            if (!salespersonsResponse.ok) {
+                throw new Error('Failed to fetch salespersons');
+            }
             const salespersonsData: Salesperson[] = await salespersonsResponse.json();
-            
+
             if (!salespersonsData.length) {
-                showAlert('Failed to fetch salespersons data');
+                showNotification('No salespersons found', 'error');
                 return;
             }
 
             setSalespersons(salespersonsData);
 
-            // Calculate date range for the selected quarter
-            const startDate = new Date(selectedYear, (selectedQuarter - 1) * 3, 1);
-            const endDate = new Date(selectedYear, selectedQuarter * 3, 0);
-            
-            const queryParams = new URLSearchParams({
-                startDate: startDate.toISOString().split('T')[0],
-                endDate: endDate.toISOString().split('T')[0]
-            });
-
-            // Fetch sales for the date range
-            const salesResponse = await fetch(`/api/sales?${queryParams}`, {
+            const salesResponse = await fetch('/api/sales', {
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 }
             });
+            if (!salesResponse.ok) {
+                throw new Error('Failed to fetch sales');
+            }
             const salesData: Sale[] = await salesResponse.json();
 
-            if (!salesData.length) {
-                showAlert('Failed to fetch sales data');
-                return;
-            }
-
-            // Calculate commission reports
             const calculatedReports = calculateCommissionReports(salespersonsData, salesData);
             setReports(calculatedReports);
 
         } catch (error) {
             console.error('Error fetching data:', error);
-            showAlert('Failed to fetch data');
+            showNotification(error instanceof Error ? error.message : 'Failed to fetch data', 'error');
+        } finally {
+            setIsLoading(false);
         }
-    }, [selectedYear, selectedQuarter]); // Include dependencies for useCallback
+    }, [showNotification, calculateCommissionReports]);
 
     useEffect(() => {
         fetchSalespersonsAndSales();
-    }, [fetchSalespersonsAndSales]); // Now properly depends on the memoized function
-
-    const calculateCommissionReports = (salespersons: Salesperson[], sales: Sale[]): CommissionReport[] => {
-        // Create a map to group sales by salesperson
-        const salesBySalesperson = new Map<number, Sale[]>();
-        
-        // Initialize the map with empty arrays for all salespersons
-        salespersons.forEach(sp => {
-            salesBySalesperson.set(sp.id, []);
-        });
-
-        // Group sales by salesperson
-        sales.forEach(sale => {
-            const existingSales = salesBySalesperson.get(sale.salesPersonId) || [];
-            existingSales.push(sale);
-            salesBySalesperson.set(sale.salesPersonId, existingSales);
-        });
-
-        // Calculate commission reports for each salesperson
-        return Array.from(salesBySalesperson.entries())
-            .map(([salespersonId, salesList]) => {
-                let totalSales = 0;
-                let totalCommission = 0;
-
-                // Calculate totals
-                salesList.forEach(sale => {
-                    const saleAmount = sale.product.salePrice;
-                    const commissionPercentage = sale.product.commissionPercentage;
-                    totalSales += saleAmount;
-                    totalCommission += (saleAmount * (commissionPercentage / 100));
-                });
-
-                return {
-                    salespersonId,
-                    totalSales,
-                    totalCommission,
-                    salesDetails: salesList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) // Sort by date descending
-                };
-            })
-            .filter(report => report.salesDetails.length > 0) // Only show salespersons with sales
-            .sort((a, b) => b.totalCommission - a.totalCommission); // Sort by commission amount descending
-    };
+    }, [fetchSalespersonsAndSales]);
 
     const getSalespersonName = (id: number): string => {
         const salesperson = salespersons.find(sp => sp.id === id);
         return salesperson ? `${salesperson.firstName} ${salesperson.lastName}` : 'Unknown';
     };
 
+    const handleApplyFilter = () => {
+        setAppliedYear(selectedYear);
+        setAppliedQuarter(selectedQuarter);
+        fetchSalespersonsAndSales();
+    };
+
+    const handleClearFilter = () => {
+        setSelectedYear(currentYear);
+        setSelectedQuarter(currentQuarter);
+        setAppliedYear(currentYear);
+        setAppliedQuarter(currentQuarter);
+        fetchSalespersonsAndSales();
+    };
+
+    const getYearsToShow = () => {
+        return [currentYear - 2, currentYear - 1, currentYear]
+    }
+
     return (
         <div>
-            <Modal
-                isOpen={alertModalConfig.isOpen}
-                onRequestClose={() => setAlertModalConfig({ ...alertModalConfig, isOpen: false })}
-                title="Notice"
-                message={alertModalConfig.message}
-            />
+            {notification && (
+                <div
+                    style={{
+                        padding: '10px',
+                        marginBottom: '20px',
+                        borderRadius: '4px',
+                        backgroundColor: notification.type === 'error' ? '#fee2e2' : '#dcfce7',
+                        color: notification.type === 'error' ? '#dc2626' : '#16a34a',
+                    }}
+                >
+                    {notification.message}
+                </div>
+            )}
 
             <Modal
                 isOpen={isDetailsModalOpen}
@@ -193,17 +212,16 @@ const CommissionReports: React.FC = () => {
             </Modal>
 
             <h2>Quarterly Commission Reports</h2>
-            
+
             <div style={formStyles.filterContainer}>
                 <div style={formStyles.field}>
                     <label style={formStyles.label}>Year</label>
-                    <select 
+                    <select
                         style={formStyles.select}
                         value={selectedYear}
                         onChange={e => setSelectedYear(parseInt(e.target.value))}
                     >
-                        {[...Array(5)].map((_, i) => {
-                            const year = new Date().getFullYear() - 2 + i;
+                        {getYearsToShow().map(year => {
                             return (
                                 <option key={year} value={year}>
                                     {year}
@@ -215,7 +233,7 @@ const CommissionReports: React.FC = () => {
 
                 <div style={formStyles.field}>
                     <label style={formStyles.label}>Quarter</label>
-                    <select 
+                    <select
                         style={formStyles.select}
                         value={selectedQuarter}
                         onChange={e => setSelectedQuarter(parseInt(e.target.value))}
@@ -226,45 +244,77 @@ const CommissionReports: React.FC = () => {
                             </option>
                         ))}
                     </select>
+                </div>                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                    <button
+                        onClick={handleApplyFilter}
+                        style={selectedYear === appliedYear && selectedQuarter === appliedQuarter ? formStyles.disabledButton : formStyles.dateApplyButton}
+                        disabled={selectedYear === appliedYear && selectedQuarter === appliedQuarter}
+                    >
+                        Apply Filter
+                    </button>
+                    {(appliedYear !== currentYear || appliedQuarter !== currentQuarter) && (
+                        <button
+                            onClick={handleClearFilter}
+                            style={formStyles.deleteButton}
+                        >
+                            Clear Filter
+                        </button>
+                    )}
                 </div>
             </div>
 
-            <table style={formStyles.table}>
-                <thead>
-                    <tr>
-                        <th style={formStyles.th}>Salesperson</th>
-                        <th style={{ ...formStyles.th, textAlign: 'right' }}>Total Sales</th>
-                        <th style={{ ...formStyles.th, textAlign: 'right' }}>Total Commission</th>
-                        <th style={{ ...formStyles.th, textAlign: 'center' }}>Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {reports.map(report => (
-                        <tr key={report.salespersonId}>
-                            <td style={formStyles.td}>
-                                {getSalespersonName(report.salespersonId)}
-                            </td>
-                            <td style={{ ...formStyles.td, textAlign: 'right' }}>
-                                ${report.totalSales.toFixed(2)}
-                            </td>
-                            <td style={{ ...formStyles.td, textAlign: 'right' }}>
-                                ${report.totalCommission.toFixed(2)}
-                            </td>
-                            <td style={{ ...formStyles.td, textAlign: 'center' }}>
-                                <button
-                                    onClick={() => {
-                                        setSelectedReport(report);
-                                        setIsDetailsModalOpen(true);
-                                    }}
-                                    style={formStyles.button}
-                                >
-                                    View Details
-                                </button>
-                            </td>
+            {isLoading ? (
+                <div style={{ textAlign: 'center', padding: '20px' }}>Loading commission reports...</div>
+            ) : !reports.length ? (
+                <div style={{ textAlign: 'center', padding: '20px' }}>
+                    <div>No commission reports found for Q{appliedQuarter} {appliedYear}.</div>
+                    {(appliedYear !== currentYear || appliedQuarter !== currentQuarter) && (
+                        <button
+                            onClick={handleClearFilter}
+                            style={{ ...formStyles.button, marginTop: '10px' }}
+                        >
+                            Return to Current Quarter
+                        </button>
+                    )}
+                </div>
+            ) : (
+                <table style={formStyles.table}>
+                    <thead>
+                        <tr>
+                            <th style={formStyles.th}>Salesperson</th>
+                            <th style={{ ...formStyles.th, textAlign: 'right' }}>Total Sales</th>
+                            <th style={{ ...formStyles.th, textAlign: 'right' }}>Total Commission</th>
+                            <th style={{ ...formStyles.th, textAlign: 'center' }}>Details</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {reports.map(report => (
+                            <tr key={report.salespersonId}>
+                                <td style={formStyles.td}>
+                                    {getSalespersonName(report.salespersonId)}
+                                </td>
+                                <td style={{ ...formStyles.td, textAlign: 'right' }}>
+                                    ${report.totalSales.toFixed(2)}
+                                </td>
+                                <td style={{ ...formStyles.td, textAlign: 'right' }}>
+                                    ${report.totalCommission.toFixed(2)}
+                                </td>
+                                <td style={{ ...formStyles.td, textAlign: 'center' }}>
+                                    <button
+                                        onClick={() => {
+                                            setSelectedReport(report);
+                                            setIsDetailsModalOpen(true);
+                                        }}
+                                        style={formStyles.button}
+                                    >
+                                        View Details
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
         </div>
     );
 };

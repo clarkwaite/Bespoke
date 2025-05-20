@@ -1,8 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Sale, SaleFormData, DateRangeFilter, ApiResponse, Product, Salesperson, Customer } from '../../types';
-import Modal from '../shared/Modal';
-import { formStyles } from '../shared/formStyles';
+import { formStyles } from '../shared/styles';
 import { SalesModal } from './SalesModal';
+import { isBetweenTwoDates } from '../shared/helpers';
+
+type ErrorMessage = {
+    message: string;
+    type: 'error' | 'success';
+};
 
 const Sales: React.FC = () => {
     const [sales, setSales] = useState<Sale[]>([]);
@@ -10,6 +15,12 @@ const Sales: React.FC = () => {
         startDate: '',
         endDate: ''
     });
+    const [appliedDateFilter, setAppliedDateFilter] = useState<DateRangeFilter>({
+        startDate: '',
+        endDate: ''
+    });
+    const [isLoading, setIsLoading] = useState(false);
+    const [notification, setNotification] = useState<ErrorMessage | null>(null);
     const [newSale, setNewSale] = useState<SaleFormData>({
         productId: 0,
         salesPersonId: 0,
@@ -17,26 +28,18 @@ const Sales: React.FC = () => {
         date: new Date().toISOString().split('T')[0]
     });
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [alertModalConfig, setAlertModalConfig] = useState({
-        isOpen: false,
-        message: ''
-    });
-
-    // Additional state for dropdown options
     const [products, setProducts] = useState<Product[]>([]);
     const [salespersons, setSalespersons] = useState<Salesperson[]>([]);
     const [customers, setCustomers] = useState<Customer[]>([]);
 
-    useEffect(() => {
-        fetchSales();
-        fetchDropdownData();
-    }, [dateFilter]);
+    // TODO: make this a reusable hook
+    const showNotification = useCallback((message: string, type: 'error' | 'success') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 5000);
+    }, []);
 
-    const showAlert = (message: string) => {
-        setAlertModalConfig({ isOpen: true, message });
-    };
-
-    const fetchDropdownData = async () => {
+    // TODO: make all of these fetches a reusable hook
+    const fetchDropdownData = useCallback(async () => {
         try {
             // Fetch products
             const productsResponse = await fetch('/api/products');
@@ -60,37 +63,38 @@ const Sales: React.FC = () => {
             }
         } catch (error) {
             console.error('Error fetching dropdown data:', error);
-            showAlert('Failed to fetch necessary data');
+            showNotification('Failed to fetch necessary data', 'error');
         }
-    };
+    }, [showNotification]);
 
-    const fetchSales = async () => {
+    const fetchSales = useCallback(async () => {
+        setIsLoading(true);
         try {
-            const queryParams = new URLSearchParams();
-            if (dateFilter.startDate) queryParams.append('startDate', dateFilter.startDate);
-            if (dateFilter.endDate) queryParams.append('endDate', dateFilter.endDate);
-            
-            const response = await fetch(`/api/sales?${queryParams}`);
+            const response = await fetch(`/api/sales`);
             const data: Sale[] = await response.json();
-            if (data.length) {
-                setSales(data);
-            } else {
-                showAlert('Failed to fetch sales');
-            }
+            setSales(data);
         } catch (error) {
             console.error('Error fetching sales:', error);
-            showAlert('Failed to fetch sales');
+            showNotification('Failed to fetch sales', 'error');
+        } finally {
+            setIsLoading(false);
         }
-    };
+    }, [showNotification]);
 
-    const handleAddSale = async () => {
+    useEffect(() => {
+        fetchSales();
+        fetchDropdownData();
+    }, [fetchSales, fetchDropdownData]);
+
+    const handleAddSale = async (formData: SaleFormData) => {
+        console.log('Adding sale:', formData);
         try {
             const response = await fetch('/api/sales', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(newSale)
+                body: JSON.stringify(formData)
             });
             const data: ApiResponse<Sale> = await response.json();
             if (data.success) {
@@ -102,20 +106,30 @@ const Sales: React.FC = () => {
                     date: new Date().toISOString().split('T')[0]
                 });
                 setIsAddModalOpen(false);
+                showNotification('Sale created successfully', 'success');
             } else {
-                showAlert(data.message || 'Failed to create sale');
+                showNotification(data.message || 'Failed to create sale', 'error');
             }
         } catch (error) {
             console.error('Error creating sale:', error);
-            showAlert('Failed to create sale');
+            showNotification('Failed to create sale', 'error');
         }
+    };
+
+    const handleApplyFilter = () => {
+        setAppliedDateFilter(dateFilter);
+    };
+
+    const handleClearFilter = () => {
+        setDateFilter({ startDate: '', endDate: '' });
+        setAppliedDateFilter({ startDate: '', endDate: '' });
     };
 
     const calculateCommission = (sale: Sale): number => {
         return sale.product.salePrice * (sale.product.commissionPercentage / 100);
     };
 
-   const salesTableTD = (value: string) => {
+    const salesTableTD = (value: string) => {
         return <td style={formStyles.td}>{value}</td>
     }
 
@@ -129,16 +143,30 @@ const Sales: React.FC = () => {
 
     return (
         <div>
-        <SalesModal
-            isModalOpen={isAddModalOpen}
-            setIsModalOpen={setIsAddModalOpen}
-            sale={newSale}
-            products={products}
-            salespersons={salespersons}
-            customers={customers}
-            handleSave={handleAddSale}
-            isEditMode={false}
-        />
+            {notification && (
+                <div
+                    style={{
+                        padding: '10px',
+                        marginBottom: '20px',
+                        borderRadius: '4px',
+                        backgroundColor: notification.type === 'error' ? '#fee2e2' : '#dcfce7',
+                        color: notification.type === 'error' ? '#dc2626' : '#16a34a',
+                    }}
+                >
+                    {notification.message}
+                </div>
+            )}
+
+            <SalesModal
+                isModalOpen={isAddModalOpen}
+                setIsModalOpen={setIsAddModalOpen}
+                sale={newSale}
+                products={products}
+                salespersons={salespersons}
+                customers={customers}
+                handleSave={handleAddSale}
+                isEditMode={false}
+            />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h2>Sales</h2>
@@ -154,7 +182,7 @@ const Sales: React.FC = () => {
                 <div style={formStyles.field}>
                     <label style={formStyles.label}>Start Date</label>
                     <input
-                        style={formStyles.input}
+                        style={formStyles.datePicker}
                         type="date"
                         value={dateFilter.startDate}
                         onChange={e => setDateFilter({ ...dateFilter, startDate: e.target.value })}
@@ -163,36 +191,63 @@ const Sales: React.FC = () => {
                 <div style={formStyles.field}>
                     <label style={formStyles.label}>End Date</label>
                     <input
-                        style={formStyles.input}
+                        style={formStyles.datePicker}
                         type="date"
                         value={dateFilter.endDate}
                         onChange={e => setDateFilter({ ...dateFilter, endDate: e.target.value })}
                     />
                 </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                    <button
+                        onClick={handleApplyFilter}
+                        style={!dateFilter.startDate || !dateFilter.endDate ? formStyles.disabledButton : formStyles.dateApplyButton}
+                        disabled={!dateFilter.startDate || !dateFilter.endDate}
+                    >
+                        Apply Filter
+                    </button>
+                    {(appliedDateFilter.startDate || appliedDateFilter.endDate) && (
+                        <button
+                            onClick={handleClearFilter}
+                            style={formStyles.deleteButton}
+                        >
+                            Clear Filter
+                        </button>
+                    )}
+                </div>
             </div>
 
-            <table style={formStyles.table}>
-                <thead>
-                    <tr>
-                        {salesTableHeaders.map((header, index) => (
-                            <th key={index} style={formStyles.th}>
-                                {header}
-                            </th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {sales.map(sale => (
-                        <tr key={sale.id}>
-                            {salesTableTD(`${sale.customer.firstName} ${sale.customer.lastName}`)}
-                            {salesTableTD(new Date(sale.date).toLocaleDateString())}
-                            {salesTableTD(sale.product.salePrice.toFixed(2))}
-                            {salesTableTD(`${sale.customer.firstName} ${sale.customer.lastName}`)}
-                            {salesTableTD(calculateCommission(sale).toFixed(2))}
+            {isLoading ? (
+                <div style={{ textAlign: 'center', padding: '20px' }}>Loading sales...</div>
+            ) : !sales.length ? (
+                <div style={{ textAlign: 'center', padding: '20px' }}>No sales found.</div>
+            ) : (
+                <table style={formStyles.table}>
+                    <thead>
+                        <tr>
+                            {salesTableHeaders.map((header, index) => (
+                                <th key={index} style={formStyles.th}>
+                                    {header}
+                                </th>
+                            ))}
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {sales
+                            .filter((sale) => appliedDateFilter.startDate && appliedDateFilter.endDate
+                                ? isBetweenTwoDates({ date: sale.date, dateFilter: appliedDateFilter })
+                                : true)
+                            .map(sale => (
+                                <tr key={sale.id}>
+                                    {salesTableTD(`${sale.customer.firstName} ${sale.customer.lastName}`)}
+                                    {salesTableTD(new Date(sale.date).toLocaleDateString())}
+                                    {salesTableTD(sale.product.salePrice.toFixed(2))}
+                                    {salesTableTD(`${sale.salesPerson.firstName} ${sale.salesPerson.lastName}`)}
+                                    {salesTableTD(calculateCommission(sale).toFixed(2))}
+                                </tr>
+                            ))}
+                    </tbody>
+                </table>
+            )}
         </div>
     );
 };

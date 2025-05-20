@@ -1,20 +1,13 @@
 import { useState, useEffect } from 'react';
-import { formStyles } from "../shared/formStyles";
+import { formStyles } from "../shared/styles";
 import Modal from "../shared/Modal";
+import { SaleFormData } from './types';
 
 type ValidationErrors = {
     productId?: string;
     salesPersonId?: string;
     customerId?: string;
     date?: string;
-};
-
-type SaleFormData = {
-    productId: number;
-    salesPersonId: number;
-    customerId: number;
-    date: string;
-    id?: number;
 };
 
 type SaleModalProps = {
@@ -78,19 +71,19 @@ export const SalesModal = ({
 
     const validateForm = (): boolean => {
         const newErrors: ValidationErrors = {};
-        
+
         if (!formData.productId) {
             newErrors.productId = 'Product selection is required';
         }
-        
+
         if (!formData.salesPersonId) {
             newErrors.salesPersonId = 'Salesperson selection is required';
         }
-        
+
         if (!formData.customerId) {
             newErrors.customerId = 'Customer selection is required';
         }
-        
+
         if (!formData.date) {
             newErrors.date = 'Sale date is required';
         } else {
@@ -106,6 +99,10 @@ export const SalesModal = ({
     };
 
     const handleSubmit = () => {
+        console.log('Form data:', {
+            ...formData,
+            id: isEditMode ? sale?.id : undefined
+        });
         if (validateForm()) {
             setIsSubmitting(true);
             handleSave({
