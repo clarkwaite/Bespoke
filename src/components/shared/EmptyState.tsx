@@ -1,9 +1,4 @@
-import { styled } from "styled-components"
-
-const EmptyStateContainer = styled.div`
-    text-align: center;
-    padding: 20px;
-`
+import { EmptyStateContainer } from "./styles"
 
 export const EmptyState = ({ message }: { message: string }) => {
     return <EmptyStateContainer>

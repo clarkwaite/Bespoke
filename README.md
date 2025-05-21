@@ -10,29 +10,18 @@ This is a simple sales tracking application built with React and TypeScript. The
 - **Sales Tracking**: View a list of sales with filtering options by date range. Displays details such as Product, Customer, Date, Price, Salesperson, and Salesperson Commission.
 - **Commission Reports**: Generate and view quarterly commission reports for each salesperson based on their sales.
 
+## Features I Would Have Liked To Complete With More Time
+
+- **Pagination**: Currently the data is small, but without pagination this app does not scale very well.
+- **Third party table library**: Something like react-table or similar. This would have a lot of features like sorting by columns under the hood.
+- **Fuller test coverage**: Tests take a lot of time to write. I was able to test the helper functions, but was unable to fully test all of the integration tests in the larger components. 
+
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js (version 14 or higher)
 - npm (version 6 or higher)
-
-### Installation
-
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   ```
-
-2. Navigate to the project directory:
-   ```
-   cd sales-tracking-app
-   ```
-
-3. Install the dependencies:
-   ```
-   npm install
-   ```
 
 ### Running the Application
 
@@ -51,11 +40,3 @@ npm run build
 ```
 
 This will generate a `build` folder with the optimized application.
-
-## Contributing
-
-Feel free to submit issues or pull requests for any improvements or bug fixes.
-
-## License
-
-This project is licensed under the MIT License.

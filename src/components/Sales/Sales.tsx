@@ -14,6 +14,7 @@ import {
     TableCell,
     Button,
     DateApplyButton,
+    NoResultsContainer,
 } from '../shared/styles'
 import { SalesModal } from './SalesModal'
 import { DateRange, SaleFormData } from './types'
@@ -92,6 +93,39 @@ export const Sales = () => {
         'Commission'
     ]
 
+    const buildSalesTableBody = () => {
+        const filteredSales = sales.filter((sale) => {
+            if (appliedDateFilter.startDate && appliedDateFilter.endDate) {
+                return isBetweenTwoDates({ date: sale.date, dateFilter: appliedDateFilter })
+            }
+            return true
+        })
+
+        return filteredSales.length ? filteredSales
+            .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf())
+            .map(sale => (
+                <tr key={sale.id}>
+                    {salesTableTD(sale.product.name)}
+                    {salesTableTD(`${sale.customer.firstName} ${sale.customer.lastName}`)}
+                    {salesTableTD(new Date(sale.date).toLocaleDateString())}
+                    {salesTableTD(sale.product.salePrice.toFixed(2))}
+                    {salesTableTD(`${sale.salesPerson.firstName} ${sale.salesPerson.lastName}`)}
+                    {salesTableTD(calculateCommission(sale).toFixed(2))}
+                </tr>
+            )) : (
+            <TableCell colSpan={salesTableHeaders.length}>
+                <NoResultsContainer>
+                    <strong>No sales found for the selected date range</strong>
+                    <Button onClick={handleClearFilter} variant='primary'>
+                        Clear Filters
+                    </Button>
+                </NoResultsContainer>
+            </TableCell>
+        )
+    }
+
+
+
     return (
         <Container>
             <NotificationDisplay notification={notification} />
@@ -152,20 +186,7 @@ export const Sales = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {sales
-                            .filter((sale) => appliedDateFilter.startDate && appliedDateFilter.endDate
-                                ? isBetweenTwoDates({ date: sale.date, dateFilter: appliedDateFilter })
-                                : true)
-                            .map(sale => (
-                                <tr key={sale.id}>
-                                    {salesTableTD(sale.product.name)}
-                                    {salesTableTD(`${sale.customer.firstName} ${sale.customer.lastName}`)}
-                                    {salesTableTD(new Date(sale.date).toLocaleDateString())}
-                                    {salesTableTD(sale.product.salePrice.toFixed(2))}
-                                    {salesTableTD(`${sale.salesPerson.firstName} ${sale.salesPerson.lastName}`)}
-                                    {salesTableTD(calculateCommission(sale).toFixed(2))}
-                                </tr>
-                            ))}
+                        {buildSalesTableBody()}
                     </tbody>
                 </Table>
             )}

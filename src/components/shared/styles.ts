@@ -202,3 +202,20 @@ export const ActionButton = styled(Button)<{ action?: 'edit' | 'delete' }>`
 export const ApplyFilterButton = styled(ActionButton)`
     margin-bottom: 20px;
 `;
+
+export const EmptyStateContainer = styled.div`
+    text-align: center;
+    padding: 20px;
+`
+
+export const NoResultsContainer = styled(EmptyStateContainer)`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+`
+
+export const EmptyCommissionReportContainer = styled(EmptyStateContainer)`
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 40px;
+`

@@ -1,10 +1,5 @@
 import { styled } from "styled-components"
-import { Button } from "../shared/styles"
-
-const EmptyStateContainer = styled.div`
-    text-align: center;
-    padding: 20px;
-`
+import { Button, EmptyCommissionReportContainer } from "../shared/styles"
 
 const ReturnButton = styled(Button).attrs({ variant: 'primary' })`
     margin-top: 10px;
@@ -26,13 +21,13 @@ export const EmptyCommissionReportState = ({
     handleClearFilter
 }: EmptyCommissionReportType) => {
     return (
-        <EmptyStateContainer>
+        <EmptyCommissionReportContainer>
             <div>No commission reports found for Q{appliedQuarter} {appliedYear}.</div>
             {(appliedYear !== currentYear || appliedQuarter !== currentQuarter) && (
                 <ReturnButton onClick={handleClearFilter} variant='primary'>
                     Return to Current Quarter
                 </ReturnButton>
             )}
-        </EmptyStateContainer>
+        </EmptyCommissionReportContainer>
     )
 }

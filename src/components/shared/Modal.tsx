@@ -19,7 +19,9 @@ const customStyles = {
     padding: '20px',
     borderRadius: '8px',
     maxWidth: '500px',
-    width: '90%'
+    width: '90%',
+    maxHeight: '80vh',
+    overflow: 'auto'
   },
   overlay: {
     backgroundColor: 'rgba(0, 0, 0, 0.75)'
