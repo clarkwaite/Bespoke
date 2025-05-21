@@ -22,14 +22,16 @@ type CustomersModalType = {
     isEditMode: boolean
 }
 
+const defaultCustomer: CustomerFormData = {
+    firstName: '',
+    lastName: '',
+    address: '',
+    phone: '',
+    startDate: new Date().toISOString().split('T')[0]
+}
+
 export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSave, isEditMode }: CustomersModalType) => {
-    const [formData, setFormData] = useState<CustomerFormData>({
-        firstName: '',
-        lastName: '',
-        address: '',
-        phone: '',
-        startDate: new Date().toISOString().split('T')[0]
-    })
+    const [formData, setFormData] = useState<CustomerFormData>(defaultCustomer)
     const [errors, setErrors] = useState<CustomerValidationErrors>({})
     const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -40,13 +42,7 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
                 startDate: customer.startDate.split('T')[0]
             })
         } else {
-            setFormData({
-                firstName: '',
-                lastName: '',
-                address: '',
-                phone: '',
-                startDate: new Date().toISOString().split('T')[0]
-            })
+            setFormData(defaultCustomer)
         }
         setErrors({})
     }, [customer, isModalOpen])
@@ -73,7 +69,7 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
         <Modal
             isOpen={isModalOpen}
             onRequestClose={() => setIsModalOpen(false)}
-            title={isEditMode ? "Edit Customer" : "Add New Customer"}
+            title={isEditMode ? "Edit Customer" : "Add Customer"}
             showConfirmButton={false}
         >
             <div>

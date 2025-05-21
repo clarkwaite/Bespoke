@@ -1,18 +1,24 @@
 import { Customer, Product, Salesperson } from "../../types"
-import { validatePhoneFormat } from "./helpers"
 
 type ValidationResult<T> = {
     isValid: boolean
     errors: T
 }
 
-// Common validation types
 export type CommonValidationErrors = {
     firstName?: string
     lastName?: string
     address?: string
     phone?: string
     startDate?: string
+}
+
+export const validatePhoneFormat = (phone: string): string | null => {
+    const cleaned = phone.replace(/\D/g, '')
+    if (!cleaned) return 'Phone number is required'
+    if (cleaned.length !== 10) return 'Phone number must be 10 digits in length'
+    if (!/^\d{3}-\d{3}-\d{4}$/.test(phone)) return 'Phone number must be in xxx-xxx-xxxx format'
+    return null
 }
 
 // Customer validation
@@ -79,7 +85,6 @@ export const validateSalesperson = (
         errors.phone = phoneError
     }
 
-    // Check for duplicates
     if (data.firstName && data.lastName && data.phone) {
         const phoneDuplicate = existingSalespersons.find(sp =>
             sp.id !== currentId &&
@@ -189,7 +194,6 @@ export const validateProduct = (
         errors.commissionPercentage = 'Commission percentage cannot exceed 100%'
     }
 
-    // Check for duplicates
     if (data.name && data.manufacturer) {
         const duplicate = existingProducts.find(p =>
             p.id !== currentId &&

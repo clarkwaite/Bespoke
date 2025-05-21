@@ -13,11 +13,3 @@ export const formatPhoneNumber = (value: string): string => {
     if (cleaned.length < 7) return `${cleaned.slice(0, 3)}-${cleaned.slice(3)}`
     return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`
 }
-
-export const validatePhoneFormat = (phone: string): string | null => {
-    const cleaned = phone.replace(/\D/g, '')
-    if (!cleaned) return 'Phone number is required'
-    if (cleaned.length !== 10) return 'Phone number must be 10 digits in length'
-    if (!/^\d{3}-\d{3}-\d{4}$/.test(phone)) return 'Phone number must be in xxx-xxx-xxxx format'
-    return null
-}

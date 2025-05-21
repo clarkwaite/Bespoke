@@ -23,7 +23,7 @@ import { SALES_QUERY_KEY } from '../shared/constants'
 import { LoadingState } from '../shared/LoadingState'
 import { EmptyState } from '../shared/EmptyState'
 
-const Sales: React.FC = () => {
+export const Sales = () => {
     const queryClient = useQueryClient()
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [dateFilter, setDateFilter] = useState<DateRange>({ startDate: '', endDate: '' })
@@ -172,5 +172,3 @@ const Sales: React.FC = () => {
         </Container>
     )
 }
-
-export default Sales

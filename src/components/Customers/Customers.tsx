@@ -13,13 +13,13 @@ import {
     Button,
 } from '../shared/styles'
 import { CustomersModal } from './CustomersModal'
-import DeleteConfirmationModal from '../shared/DeleteConfirmationModal'
+import { DeleteConfirmationModal } from '../shared/DeleteConfirmationModal'
 import { NotificationDisplay, useNotification } from '../../hooks/useNotification'
 import { CUSTOMERS_QUERY_KEY } from '../shared/constants'
 import { LoadingState } from '../shared/LoadingState'
 import { EmptyState } from '../shared/EmptyState'
 
-const Customers: React.FC = () => {
+export const Customers = () => {
     const queryClient = useQueryClient()
     const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -51,10 +51,10 @@ const Customers: React.FC = () => {
             )
 
             if (response.ok && response.status === 204) {
-                return customer as Customer
+                return customer
             }
 
-            return response.ok ? (await response.json() as Customer) : customer as Customer
+            return response.ok ? (await response.json()) : customer
         },
         onSuccess: (_, variables) => {
             const isUpdate = typeof variables.id === 'number'
@@ -180,5 +180,3 @@ const Customers: React.FC = () => {
         </ContentContainer>
     )
 }
-
-export default Customers

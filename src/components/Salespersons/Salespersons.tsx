@@ -13,13 +13,13 @@ import {
     Button,
 } from '../shared/styles'
 import { SalespersonsModal } from './SalespersonsModal'
-import DeleteConfirmationModal from '../shared/DeleteConfirmationModal'
+import { DeleteConfirmationModal } from '../shared/DeleteConfirmationModal'
 import { NotificationDisplay, useNotification } from '../../hooks/useNotification'
 import { SALESPERSONS_QUERY_KEY } from '../shared/constants'
 import { LoadingState } from '../shared/LoadingState'
 import { EmptyState } from '../shared/EmptyState'
 
-const Salespersons: React.FC = () => {
+export const Salespersons = () => {
     const queryClient = useQueryClient()
     const [editingSalesperson, setEditingSalesperson] = useState<Salesperson | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -122,15 +122,10 @@ const Salespersons: React.FC = () => {
         setDeleteModalOpen(true)
     }, [])
 
-    const handleConfirmDelete = useCallback(() => {
-        if (salespersonToDelete) {
-            deleteSalesperson(salespersonToDelete.id)
-        }
-    }, [deleteSalesperson, salespersonToDelete])
-
     return (
         <ContentContainer>
-            <NotificationDisplay notification={notification} />            <SalespersonsModal
+            <NotificationDisplay notification={notification} />
+            <SalespersonsModal
                 isModalOpen={isModalOpen}
                 setIsModalOpen={setIsModalOpen}
                 salesperson={editingSalesperson}
@@ -212,5 +207,3 @@ const Salespersons: React.FC = () => {
         </ContentContainer>
     )
 }
-
-export default Salespersons

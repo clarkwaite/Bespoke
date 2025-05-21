@@ -4,8 +4,8 @@ export interface Salesperson {
     lastName: string;
     address: string;
     phone: string;
-    startDate: string; // ISO 8601 date string
-    terminationDate: string | null; // ISO 8601 date string
+    startDate: string;
+    terminationDate: string | null;
     manager: string
 }
 
@@ -26,7 +26,7 @@ export interface Customer {
     lastName: string;
     address: string;
     phone: string;
-    startDate: string; // ISO 8601 date string
+    startDate: string;
 }
 
 export interface Sale {
@@ -34,15 +34,16 @@ export interface Sale {
     productId: number;
     salesPersonId: number;
     customerId: number;
-    date: string; // ISO 8601 date string
+    date: string;
     product: Product;
     salesPerson: Salesperson;
     customer: Customer;
 }
 
-export interface CommissionReport {
+export interface CommissionReportType {
     salespersonId: number;
     totalSales: number;
+    numberOfSales: number;
     totalCommission: number;
     salesDetails: Sale[];
     salespersonName: string;
@@ -51,13 +52,12 @@ export interface CommissionReport {
 export interface Discount {
     id: number;
     productId: number;
-    beginDate: string; // ISO 8601 date string
-    endDate: string; // ISO 8601 date string
+    beginDate: string;
+    endDate: string;
     percentage: number;
     product: Product;
 }
 
-// API Response Types
 export interface ApiResponse<T> {
     data: T;
     success: boolean;
@@ -69,7 +69,6 @@ export interface DateRangeFilter {
     endDate: string;
 }
 
-// Common form state types
 export interface SaleFormData {
     productId: number;
     salesPersonId: number;

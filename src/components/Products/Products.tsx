@@ -13,15 +13,13 @@ import {
     Button,
 } from '../shared/styles'
 import { ProductsModal } from './ProductsModal'
-import DeleteConfirmationModal from '../shared/DeleteConfirmationModal'
+import { DeleteConfirmationModal } from '../shared/DeleteConfirmationModal'
 import { NotificationDisplay, useNotification } from '../../hooks/useNotification'
 import { PRODUCTS_QUERY_KEY } from '../shared/constants'
 import { LoadingState } from '../shared/LoadingState'
 import { EmptyState } from '../shared/EmptyState'
 
-type ProductResponse = Product[]
-
-const Products: React.FC = () => {
+export const Products = () => {
     const queryClient = useQueryClient()
     const [editingProduct, setEditingProduct] = useState<Product | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -36,8 +34,7 @@ const Products: React.FC = () => {
             if (!response.ok) {
                 throw new Error('Failed to fetch products')
             }
-            const data = await response.json()
-            return data as ProductResponse
+            return response.json() as Promise<Product[]>
         }
     })
 
@@ -187,5 +184,3 @@ const Products: React.FC = () => {
         </ContentContainer>
     )
 }
-
-export default Products

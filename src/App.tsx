@@ -1,11 +1,11 @@
 import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter as Router, Route, Routes, NavLink } from 'react-router-dom'
-import Customers from './components/Customers/Customers'
-import Products from './components/Products/Products'
-import Sales from './components/Sales/Sales'
-import Salespersons from './components/Salespersons/Salespersons'
-import CommissionReport from './components/Reports/CommissionReport'
+import { Customers } from './components/Customers/Customers'
+import { Products } from './components/Products/Products'
+import { Sales } from './components/Sales/Sales'
+import { Salespersons } from './components/Salespersons/Salespersons'
+import { CommissionReport } from './components/Reports/CommissionReport'
 import { AppContainer, Sidebar, SidebarNav, MainContent, PageHeader } from './appStyles'
 
 const App: React.FC = () => {
@@ -19,7 +19,7 @@ const App: React.FC = () => {
               <ul>
                 <li>
                   <NavLink to="/">
-                    Customers
+                    Sales
                   </NavLink>
                 </li>
                 <li>
@@ -28,8 +28,8 @@ const App: React.FC = () => {
                   </NavLink>
                 </li>
                 <li>
-                  <NavLink to="/sales">
-                    Sales
+                  <NavLink to="/customers">
+                    Customers
                   </NavLink>
                 </li>
                 <li>
@@ -53,9 +53,9 @@ const App: React.FC = () => {
 
             <div>
               <Routes>
-                <Route path="/" element={<Customers />} />
+                <Route path="/" element={<Sales />} />
                 <Route path="/products" element={<Products />} />
-                <Route path="/sales" element={<Sales />} />
+                <Route path="/customers" element={<Customers />} />
                 <Route path="/salespersons" element={<Salespersons />} />
                 <Route path="/reports" element={<CommissionReport />} />
               </Routes>

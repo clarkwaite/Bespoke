@@ -1,5 +1,5 @@
 import React from 'react'
-import { CommissionReport, Salesperson } from '../../types'
+import { CommissionReportType, Salesperson } from '../../types'
 import {
     TableContainer,
     Table,
@@ -9,9 +9,9 @@ import {
 } from '../shared/styles'
 
 interface CommissionReportTableProps {
-    reports: CommissionReport[]
+    reports: CommissionReportType[]
     salespersons: Salesperson[]
-    onViewDetails: (report: CommissionReport) => void
+    onViewDetails: (report: CommissionReportType) => void
 }
 
 export const CommissionReportTable: React.FC<CommissionReportTableProps> = ({
@@ -24,6 +24,7 @@ export const CommissionReportTable: React.FC<CommissionReportTableProps> = ({
             <thead>
                 <tr>
                     <TableHeader>Salesperson</TableHeader>
+                    <TableHeader>Number of Sales</TableHeader>
                     <TableHeader>Total Sales</TableHeader>
                     <TableHeader>Total Commission</TableHeader>
                     <TableHeader>Actions</TableHeader>
@@ -38,6 +39,7 @@ export const CommissionReportTable: React.FC<CommissionReportTableProps> = ({
                             <TableCell>
                                 {`${salesperson.firstName} ${salesperson.lastName}`}
                             </TableCell>
+                            <TableCell>{report.numberOfSales}</TableCell>
                             <TableCell>${report.totalSales.toFixed(2)}</TableCell>
                             <TableCell>${report.totalCommission.toFixed(2)}</TableCell>
                             <TableCell>

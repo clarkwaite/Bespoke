@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { CommissionReport, Salesperson, Sale } from '../../types'
+import { CommissionReportType, Salesperson, Sale } from '../../types'
 import {
     ContentContainer,
     ReportHeader,
@@ -15,16 +15,14 @@ import { LoadingState } from '../shared/LoadingState'
 import { ErrorState } from '../shared/ErrorState'
 import { EmptyCommissionReportState } from './EmptyCommissionReportState'
 import { CommissionReportTable } from './CommissionReportTable'
+import { SALES_QUERY_KEY, SALESPERSONS_QUERY_KEY } from '../shared/constants'
 
-const SALES_QUERY_KEY = ['sales']
-const SALESPERSONS_QUERY_KEY = ['salespersons']
-
-const CommissionReports: React.FC = () => {
+export const CommissionReport = () => {
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
     const [selectedQuarter, setSelectedQuarter] = useState<number>(Math.floor(new Date().getMonth() / 3) + 1)
     const [appliedYear, setAppliedYear] = useState<number>(new Date().getFullYear())
     const [appliedQuarter, setAppliedQuarter] = useState<number>(Math.floor(new Date().getMonth() / 3) + 1)
-    const [selectedReport, setSelectedReport] = useState<CommissionReport | null>(null)
+    const [selectedReport, setSelectedReport] = useState<CommissionReportType | null>(null)
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
 
     const currentYear = new Date().getFullYear()
@@ -59,7 +57,7 @@ const CommissionReports: React.FC = () => {
         return saleYear === appliedYear && saleQuarter === appliedQuarter
     }, [appliedYear, appliedQuarter])
 
-    const generateCommissionReports = useCallback((): CommissionReport[] => {
+    const generateCommissionReports = useCallback((): CommissionReportType[] => {
         const filteredSales = sales.filter(sale => isDateInSelectedQuarter(sale.date))
         return salespersons.map(sp => {
             const salesList = filteredSales.filter(sale => sale.salesPersonId === sp.id)
@@ -76,6 +74,7 @@ const CommissionReports: React.FC = () => {
             return {
                 salespersonId: sp.id,
                 salespersonName: `${sp.firstName} ${sp.lastName}`,
+                numberOfSales: salesList.length,
                 totalSales,
                 totalCommission,
                 salesDetails: salesList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -136,7 +135,6 @@ const CommissionReports: React.FC = () => {
                 </ApplyFilterButton>
             </ReportFilters>
 
-            {/* Render appropriate state based on conditions */}
             {isSalespersonsLoading || isSalesLoading ? (
                 <LoadingState message="commission report" />
             ) : salespersonsError ? (
@@ -174,5 +172,3 @@ const CommissionReports: React.FC = () => {
         </ContentContainer>
     )
 }
-
-export default CommissionReports

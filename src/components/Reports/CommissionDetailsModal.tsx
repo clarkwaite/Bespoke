@@ -1,5 +1,5 @@
 import React from 'react'
-import { CommissionReport, Sale } from '../../types'
+import { CommissionReportType, Sale } from '../../types'
 import Modal from '../shared/Modal'
 import {
     DetailsList,
@@ -12,7 +12,7 @@ import {
 interface CommissionDetailsModalProps {
     isOpen: boolean
     onClose: () => void
-    report: CommissionReport | null
+    report: CommissionReportType | null
 }
 
 export const CommissionDetailsModal: React.FC<CommissionDetailsModalProps> = ({

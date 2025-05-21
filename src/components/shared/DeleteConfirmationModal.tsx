@@ -9,13 +9,13 @@ interface DeleteConfirmationModalProps {
     itemName: string
 }
 
-export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
+export const DeleteConfirmationModal = ({
     isOpen,
     onClose,
     onConfirm,
     title = 'Confirm Delete',
     itemName,
-}) => {
+}: DeleteConfirmationModalProps) => {
     return (
         <Modal
             isOpen={isOpen}
@@ -29,5 +29,3 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
         />
     )
 }
-
-export default DeleteConfirmationModal

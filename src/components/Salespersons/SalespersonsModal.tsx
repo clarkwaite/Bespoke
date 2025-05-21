@@ -23,6 +23,16 @@ type SalespersonsModalProps = {
     existingSalespersons: Salesperson[]
 }
 
+const defaultSalesperson: SalespersonFormData = {
+    firstName: '',
+    lastName: '',
+    address: '',
+    phone: '',
+    startDate: new Date().toISOString().split('T')[0],
+    terminationDate: null,
+    manager: ''
+}
+
 export const SalespersonsModal = ({
     isModalOpen,
     setIsModalOpen,
@@ -31,15 +41,7 @@ export const SalespersonsModal = ({
     isEditMode,
     existingSalespersons
 }: SalespersonsModalProps) => {
-    const [formData, setFormData] = useState<SalespersonFormData>({
-        firstName: '',
-        lastName: '',
-        address: '',
-        phone: '',
-        startDate: new Date().toISOString().split('T')[0],
-        terminationDate: null,
-        manager: ''
-    })
+    const [formData, setFormData] = useState<SalespersonFormData>(defaultSalesperson)
     const [errors, setErrors] = useState<SalespersonValidationErrors>({})
     const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -51,15 +53,7 @@ export const SalespersonsModal = ({
                 terminationDate: salesperson.terminationDate ? salesperson.terminationDate.split('T')[0] : null
             })
         } else {
-            setFormData({
-                firstName: '',
-                lastName: '',
-                address: '',
-                phone: '',
-                startDate: new Date().toISOString().split('T')[0],
-                terminationDate: null,
-                manager: ''
-            })
+            setFormData(defaultSalesperson)
         }
         setErrors({})
     }, [salesperson, isModalOpen])

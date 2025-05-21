@@ -8,8 +8,6 @@ import {
 } from './modalStyles'
 import { Button } from './styles'
 
-ReactModal.setAppElement('#root')
-
 const customStyles = {
   content: {
     top: '50%',
