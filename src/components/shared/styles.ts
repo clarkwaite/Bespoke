@@ -133,9 +133,8 @@ export const Button = styled.button<{ variant?: 'primary' | 'danger' | 'default'
     }
 `;
 
-// Use the new Button variant system
 export const DateApplyButton = styled(Button)`
-    margin-top: 8;
+    margin-top: 8px;
 `;
 
 export const Select = styled.select<{ hasError?: boolean }>`
@@ -157,7 +156,7 @@ export const ErrorMessage = styled.div`
     font-size: 12px;
 `;
 
-// Detail Components
+// Detail Modal Components
 export const DetailsList = styled.ul`
     list-style: none;
     padding: 0;

@@ -84,6 +84,7 @@ const Sales: React.FC = () => {
     }
 
     const salesTableHeaders = [
+        'Product',
         'Customer',
         'Date',
         'Price',
@@ -157,6 +158,7 @@ const Sales: React.FC = () => {
                                 : true)
                             .map(sale => (
                                 <tr key={sale.id}>
+                                    {salesTableTD(sale.product.name)}
                                     {salesTableTD(`${sale.customer.firstName} ${sale.customer.lastName}`)}
                                     {salesTableTD(new Date(sale.date).toLocaleDateString())}
                                     {salesTableTD(sale.product.salePrice.toFixed(2))}

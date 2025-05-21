@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Salesperson } from "../../types"
 import Modal from "../shared/Modal"
+import { formatPhoneNumber } from "../shared/helpers"
+import { validateSalesperson, SalespersonValidationErrors } from "../shared/validation"
 import {
     FormField,
     FormLabel,
@@ -9,17 +11,6 @@ import {
     ButtonContainer,
     Button,
 } from '../shared/styles'
-
-type ValidationErrors = {
-    firstName?: string
-    lastName?: string
-    address?: string
-    phone?: string
-    startDate?: string
-    terminationDate?: string
-    manager?: string
-    duplicateName?: string
-}
 
 type SalespersonFormData = Omit<Salesperson, 'id'> & { id?: number }
 
@@ -49,7 +40,7 @@ export const SalespersonsModal = ({
         terminationDate: null,
         manager: ''
     })
-    const [errors, setErrors] = useState<ValidationErrors>({})
+    const [errors, setErrors] = useState<SalespersonValidationErrors>({})
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     useEffect(() => {
@@ -73,95 +64,10 @@ export const SalespersonsModal = ({
         setErrors({})
     }, [salesperson, isModalOpen])
 
-    const checkForDuplicates = (data: SalespersonFormData) => {
-        const phoneDuplicate = existingSalespersons.find(sp =>
-        (
-            sp.id !== (isEditMode ? salesperson?.id : undefined) &&
-            sp.phone === data.phone
-        )
-        )
-
-        const nameDuplicate = existingSalespersons.find(sp =>
-        (
-            sp.id !== (isEditMode ? salesperson?.id : undefined) &&
-            sp.firstName === data.firstName &&
-            sp.lastName === data.lastName
-        )
-        )
-
-        return {
-            phone: phoneDuplicate ? 'Phone number already exists' : null,
-            name: nameDuplicate ? 'Salesperson with this first and last name already exists' : null
-        }
-    }
-
     const validateForm = (): boolean => {
-        const newErrors: ValidationErrors = {}
-
-        if (!formData.firstName.trim()) {
-            newErrors.firstName = 'First name is required'
-        } else if (formData.firstName.length < 2) {
-            newErrors.firstName = 'First name must be at least 2 characters'
-        }
-
-        if (!formData.lastName.trim()) {
-            newErrors.lastName = 'Last name is required'
-        } else if (formData.lastName.length < 2) {
-            newErrors.lastName = 'Last name must be at least 2 characters'
-        }
-
-        if (!formData.phone.trim()) {
-            newErrors.phone = 'Phone is required'
-        } else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
-            newErrors.phone = 'Phone number must be 10 digits in length'
-        }
-
-        if (formData.firstName && formData.lastName && formData.phone) {
-            const duplicateError = checkForDuplicates(formData)
-            if (duplicateError) {
-                if (duplicateError.name) {
-                    newErrors.duplicateName = duplicateError.name
-                }
-                if (duplicateError.phone) {
-                    newErrors.phone = duplicateError.phone
-                }
-            }
-        }
-
-        if (!formData.address.trim()) {
-            newErrors.address = 'Address is required'
-        }
-
-        if (!formData.startDate) {
-            newErrors.startDate = 'Start date is required'
-        } else {
-            const startDate = new Date(formData.startDate)
-            const today = new Date()
-            if (startDate > today) {
-                newErrors.startDate = 'Start date cannot be in the future'
-            }
-        }
-
-        if (formData.terminationDate) {
-            const startDate = new Date(formData.startDate)
-            const termDate = new Date(formData.terminationDate)
-
-            if (termDate < startDate) {
-                newErrors.terminationDate = 'Termination date cannot be before start date'
-            }
-            if (termDate > new Date()) {
-                newErrors.terminationDate = 'Termination date cannot be in the future'
-            }
-        }
-
-        if (!formData.manager.trim()) {
-            newErrors.manager = 'Manager name is required'
-        } else if (formData.manager.length < 2) {
-            newErrors.manager = 'Manager name must be at least 2 characters'
-        }
-
-        setErrors(newErrors)
-        return Object.keys(newErrors).length === 0
+        const result = validateSalesperson(formData, existingSalespersons, isEditMode ? salesperson?.id : undefined)
+        setErrors(result.errors)
+        return result.isValid
     }
 
     const handleSubmit = () => {
@@ -187,7 +93,7 @@ export const SalespersonsModal = ({
                 <FormField>
                     <FormLabel>First Name *</FormLabel>
                     <Input
-                        hasError={!!errors.firstName}
+                        hasError={Boolean(errors.firstName) || Boolean(errors.duplicateName)}
                         type="text"
                         value={formData.firstName}
                         onChange={e => {
@@ -195,15 +101,19 @@ export const SalespersonsModal = ({
                             if (errors.firstName) {
                                 setErrors(prev => ({ ...prev, firstName: undefined }))
                             }
+                            if (errors.duplicateName) {
+                                setErrors(prev => ({ ...prev, duplicateName: undefined }))
+                            }
                         }}
                     />
                     {errors.firstName && <ErrorMessage>{errors.firstName}</ErrorMessage>}
+                    {errors.duplicateName && <ErrorMessage>{errors.duplicateName}</ErrorMessage>}
                 </FormField>
 
                 <FormField>
                     <FormLabel>Last Name *</FormLabel>
                     <Input
-                        hasError={!!errors.lastName}
+                        hasError={Boolean(errors.lastName) || Boolean(errors.duplicateName)}
                         type="text"
                         value={formData.lastName}
                         onChange={e => {
@@ -211,23 +121,30 @@ export const SalespersonsModal = ({
                             if (errors.lastName) {
                                 setErrors(prev => ({ ...prev, lastName: undefined }))
                             }
+                            if (errors.duplicateName) {
+                                setErrors(prev => ({ ...prev, duplicateName: undefined }))
+                            }
                         }}
                     />
                     {errors.lastName && <ErrorMessage>{errors.lastName}</ErrorMessage>}
+                    {errors.duplicateName && <ErrorMessage>{errors.duplicateName}</ErrorMessage>}
+
                 </FormField>
 
                 <FormField>
                     <FormLabel>Phone *</FormLabel>
                     <Input
-                        hasError={!!errors.phone}
+                        hasError={Boolean(errors.phone)}
                         type="tel"
                         value={formData.phone}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, phone: e.target.value }))
+                            const formattedNumber = formatPhoneNumber(e.target.value)
+                            setFormData(prev => ({ ...prev, phone: formattedNumber }))
                             if (errors.phone) {
                                 setErrors(prev => ({ ...prev, phone: undefined }))
                             }
                         }}
+                        placeholder="123-345-5678"
                     />
                     {errors.phone && <ErrorMessage>{errors.phone}</ErrorMessage>}
                 </FormField>
@@ -235,7 +152,7 @@ export const SalespersonsModal = ({
                 <FormField>
                     <FormLabel>Address *</FormLabel>
                     <Input
-                        hasError={!!errors.address}
+                        hasError={Boolean(errors.address)}
                         type="text"
                         value={formData.address}
                         onChange={e => {
@@ -251,7 +168,7 @@ export const SalespersonsModal = ({
                 <FormField>
                     <FormLabel>Start Date *</FormLabel>
                     <Input
-                        hasError={!!errors.startDate}
+                        hasError={Boolean(errors.startDate)}
                         type="date"
                         value={formData.startDate}
                         onChange={e => {
@@ -267,7 +184,7 @@ export const SalespersonsModal = ({
                 <FormField>
                     <FormLabel>Termination Date</FormLabel>
                     <Input
-                        hasError={!!errors.terminationDate}
+                        hasError={Boolean(errors.terminationDate)}
                         type="date"
                         value={formData.terminationDate || ''}
                         min={formData.startDate}
@@ -284,7 +201,7 @@ export const SalespersonsModal = ({
                 <FormField>
                     <FormLabel>Manager Name *</FormLabel>
                     <Input
-                        hasError={!!errors.manager}
+                        hasError={Boolean(errors.manager)}
                         type="text"
                         value={formData.manager}
                         onChange={e => {
@@ -311,7 +228,7 @@ export const SalespersonsModal = ({
                     </Button>
                     <Button
                         onClick={handleSubmit}
-                        disabled={isSubmitting || !!errors.duplicateName}
+                        disabled={isSubmitting || Boolean(errors.duplicateName)}
                         variant='primary'
                     >
                         {isSubmitting ? 'Saving...' : (isEditMode ? 'Update' : 'Add Salesperson')}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Product } from "../../types"
 import Modal from "../shared/Modal"
+import { validateProduct, ProductValidationErrors } from "../shared/validation"
 import {
     FormField,
     FormLabel,
@@ -9,17 +10,6 @@ import {
     ButtonContainer,
     Button,
 } from '../shared/styles'
-
-type ValidationErrors = {
-    name?: string
-    manufacturer?: string
-    style?: string
-    purchasePrice?: string
-    salePrice?: string
-    qtyOnHand?: string
-    commissionPercentage?: string
-    duplicateProduct?: string
-}
 
 type ProductFormData = Omit<Product, 'id'> & { id?: number }
 
@@ -49,7 +39,7 @@ export const ProductsModal = ({
         qtyOnHand: 0,
         commissionPercentage: 0
     })
-    const [errors, setErrors] = useState<ValidationErrors>({})
+    const [errors, setErrors] = useState<ProductValidationErrors>({})
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     useEffect(() => {
@@ -69,60 +59,10 @@ export const ProductsModal = ({
         setErrors({})
     }, [product, isModalOpen])
 
-    const checkForDuplicates = (data: ProductFormData) => {
-        const duplicate = existingProducts.find(p =>
-            p.id !== (isEditMode ? product?.id : undefined) &&
-            p.name.toLowerCase() === data.name.toLowerCase() &&
-            p.manufacturer.toLowerCase() === data.manufacturer.toLowerCase()
-        )
-
-        return duplicate ? 'A product with this name and manufacturer already exists' : null
-    }
-
     const validateForm = (): boolean => {
-        const newErrors: ValidationErrors = {}
-
-        if (!formData.name.trim()) {
-            newErrors.name = 'Name is required'
-        }
-
-        if (!formData.manufacturer.trim()) {
-            newErrors.manufacturer = 'Manufacturer is required'
-        }
-
-        if (!formData.style.trim()) {
-            newErrors.style = 'Style is required'
-        }
-
-        if (formData.purchasePrice <= 0) {
-            newErrors.purchasePrice = 'Purchase price must be greater than 0'
-        }
-
-        if (formData.salePrice <= 0) {
-            newErrors.salePrice = 'Sale price must be greater than 0'
-        } else if (formData.salePrice <= formData.purchasePrice) {
-            newErrors.salePrice = 'Sale price must be greater than purchase price'
-        }
-
-        if (formData.qtyOnHand < 0) {
-            newErrors.qtyOnHand = 'Quantity cannot be negative'
-        }
-
-        if (formData.commissionPercentage < 0) {
-            newErrors.commissionPercentage = 'Commission percentage cannot be negative'
-        } else if (formData.commissionPercentage > 100) {
-            newErrors.commissionPercentage = 'Commission percentage cannot exceed 100%'
-        }
-
-        if (formData.name && formData.manufacturer) {
-            const duplicateError = checkForDuplicates(formData)
-            if (duplicateError) {
-                newErrors.duplicateProduct = duplicateError
-            }
-        }
-
-        setErrors(newErrors)
-        return Object.keys(newErrors).length === 0
+        const result = validateProduct(formData, existingProducts, isEditMode ? product?.id : undefined)
+        setErrors(result.errors)
+        return result.isValid
     }
 
     const handleSubmit = () => {
@@ -156,7 +96,7 @@ export const ProductsModal = ({
                             if (errors.name) {
                                 setErrors(prev => ({ ...prev, name: undefined }))
                             }
-                            const duplicateError = checkForDuplicates({ ...formData, name: e.target.value })
+                            const duplicateError = validateProduct({ ...formData, name: e.target.value }, existingProducts, isEditMode ? product?.id : undefined).errors.duplicateProduct
                             if (duplicateError) {
                                 setErrors(prev => ({ ...prev, duplicateProduct: duplicateError }))
                             } else {
@@ -178,7 +118,7 @@ export const ProductsModal = ({
                             if (errors.manufacturer) {
                                 setErrors(prev => ({ ...prev, manufacturer: undefined }))
                             }
-                            const duplicateError = checkForDuplicates({ ...formData, manufacturer: e.target.value })
+                            const duplicateError = validateProduct({ ...formData, manufacturer: e.target.value }, existingProducts, isEditMode ? product?.id : undefined).errors.duplicateProduct
                             if (duplicateError) {
                                 setErrors(prev => ({ ...prev, duplicateProduct: duplicateError }))
                             } else {

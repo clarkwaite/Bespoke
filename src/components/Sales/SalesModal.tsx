@@ -4,6 +4,7 @@ import { SaleFormData } from './types'
 import { useQuery } from '@tanstack/react-query'
 import { CUSTOMERS_QUERY_KEY, PRODUCTS_QUERY_KEY, SALESPERSONS_QUERY_KEY } from '../shared/constants'
 import { Customer, Product, Salesperson } from '../../types'
+import { validateSale, SaleValidationErrors } from "../shared/validation"
 import {
     FormField,
     FormLabel,
@@ -13,13 +14,6 @@ import {
     ButtonContainer,
     Button,
 } from '../shared/styles'
-
-type ValidationErrors = {
-    productId?: string
-    salesPersonId?: string
-    customerId?: string
-    date?: string
-}
 
 type SaleModalProps = {
     isModalOpen: boolean
@@ -40,7 +34,7 @@ export const SalesModal = ({
         customerId: 0,
         date: new Date().toISOString().split('T')[0]
     })
-    const [errors, setErrors] = useState<ValidationErrors>({})
+    const [errors, setErrors] = useState<SaleValidationErrors>({})
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const { data: products = [] } = useQuery({
@@ -87,32 +81,9 @@ export const SalesModal = ({
     }, [isModalOpen])
 
     const validateForm = (): boolean => {
-        const newErrors: ValidationErrors = {}
-
-        if (!formData.productId) {
-            newErrors.productId = 'Product selection is required'
-        }
-
-        if (!formData.salesPersonId) {
-            newErrors.salesPersonId = 'Salesperson selection is required'
-        }
-
-        if (!formData.customerId) {
-            newErrors.customerId = 'Customer selection is required'
-        }
-
-        if (!formData.date) {
-            newErrors.date = 'Sale date is required'
-        } else {
-            const saleDate = new Date(formData.date)
-            const today = new Date()
-            if (saleDate > today) {
-                newErrors.date = 'Sale date cannot be in the future'
-            }
-        }
-
-        setErrors(newErrors)
-        return Object.keys(newErrors).length === 0
+        const result = validateSale(formData)
+        setErrors(result.errors)
+        return result.isValid
     }
 
     const handleSubmit = () => {

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Customer } from "../../types"
 import Modal from "../shared/Modal"
+import { formatPhoneNumber } from "../shared/helpers"
+import { validateCustomer, CustomerValidationErrors } from "../shared/validation"
 import {
     FormField,
     FormLabel,
@@ -9,14 +11,6 @@ import {
     ButtonContainer,
     Button
 } from '../shared/styles'
-
-type ValidationErrors = {
-    firstName?: string
-    lastName?: string
-    address?: string
-    phone?: string
-    startDate?: string
-}
 
 type CustomerFormData = Omit<Customer, 'id'> & { id?: number }
 
@@ -36,7 +30,7 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
         phone: '',
         startDate: new Date().toISOString().split('T')[0]
     })
-    const [errors, setErrors] = useState<ValidationErrors>({})
+    const [errors, setErrors] = useState<CustomerValidationErrors>({})
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     useEffect(() => {
@@ -58,27 +52,9 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
     }, [customer, isModalOpen])
 
     const validateForm = (): boolean => {
-        const newErrors: ValidationErrors = {}
-        if (!formData.firstName.trim()) {
-            newErrors.firstName = 'First name is required'
-        }
-        if (!formData.lastName.trim()) {
-            newErrors.lastName = 'Last name is required'
-        }
-        if (!formData.phone.trim()) {
-            newErrors.phone = 'Phone is required'
-        } else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
-            newErrors.phone = 'Phone number must be 10 digits in length'
-        }
-        if (!formData.address.trim()) {
-            newErrors.address = 'Address is required'
-        }
-        if (!formData.startDate) {
-            newErrors.startDate = 'Start date is required'
-        }
-
-        setErrors(newErrors)
-        return Object.keys(newErrors).length === 0
+        const result = validateCustomer(formData)
+        setErrors(result.errors)
+        return result.isValid
     }
 
     const handleSubmit = () => {
@@ -140,11 +116,13 @@ export const CustomersModal = ({ isModalOpen, setIsModalOpen, customer, handleSa
                         type="tel"
                         value={formData.phone}
                         onChange={e => {
-                            setFormData(prev => ({ ...prev, phone: e.target.value }))
+                            const formatted = formatPhoneNumber(e.target.value)
+                            setFormData(prev => ({ ...prev, phone: formatted }))
                             if (errors.phone) {
                                 setErrors(prev => ({ ...prev, phone: undefined }))
                             }
                         }}
+                        placeholder="123-345-5678"
                     />
                     {errors.phone && <ErrorMessage>{errors.phone}</ErrorMessage>}
                 </FormField>
