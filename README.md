@@ -6,7 +6,7 @@ This is a simple sales tracking application built with React and TypeScript. The
 
 - **Salespersons Management**: Add, update, and view salespersons. Ensures no duplicate entries.
 - **Products Management**: Add, update, and view products. Ensures no duplicate entries.
-- **Customers Management**: Add, update, and view customers. Ensures no duplicate entries.
+- **Customers Management**: Add, update, and view customers.
 - **Sales Tracking**: View a list of sales with filtering options by date range. Displays details such as Product, Customer, Date, Price, Salesperson, and Salesperson Commission.
 - **Commission Reports**: Generate and view quarterly commission reports for each salesperson based on their sales.
 
